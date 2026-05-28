@@ -16,6 +16,39 @@ export async function GET() {
       return NextResponse.json({ routines: [], setupRequired: false });
     }
 
+    if (session.user.id === "sandbox-mock-id") {
+      const mockRoutines = [
+        {
+          id: "mock-routine-1",
+          user_id: "sandbox-mock-id",
+          slot: 1,
+          emoji: "🎨",
+          title: "소묘 3시간 집중 연습",
+          created_at: new Date().toISOString(),
+        },
+        {
+          id: "mock-routine-2",
+          user_id: "sandbox-mock-id",
+          slot: 2,
+          emoji: "✍️",
+          title: "실기 오답 노트 작성",
+          created_at: new Date().toISOString(),
+        },
+        {
+          id: "mock-routine-3",
+          user_id: "sandbox-mock-id",
+          slot: 3,
+          emoji: "🏃",
+          title: "매일 체력 단련 30분",
+          created_at: new Date().toISOString(),
+        },
+      ];
+      return NextResponse.json({
+        routines: mockRoutines,
+        setupRequired: false,
+      });
+    }
+
     const supabase = await createServerSupabaseClient();
     const { data, error } = await supabase
       .from("routines")
@@ -59,6 +92,18 @@ export async function POST(request: Request) {
     }
 
     const body = (await request.json()) as { routines: RoutineDraft[] };
+
+    if (session.user.id === "sandbox-mock-id") {
+      const mockRoutines = body.routines.map((r, i) => ({
+        id: `mock-routine-${i + 1}`,
+        user_id: "sandbox-mock-id",
+        slot: r.slot,
+        emoji: r.emoji,
+        title: r.title,
+        created_at: new Date().toISOString(),
+      }));
+      return NextResponse.json({ routines: mockRoutines });
+    }
 
     if (!Array.isArray(body.routines) || body.routines.length !== 3) {
       return NextResponse.json(

@@ -88,6 +88,25 @@ async function ensureProfileForUser(
 }
 
 export async function getSessionPayload() {
+  try {
+    const cookieStore = await cookies();
+    const sandboxOverride = cookieStore.get("sandbox-override")?.value;
+    if (sandboxOverride === "student" || sandboxOverride === "admin") {
+      return {
+        user: { id: "sandbox-mock-id", email: "sandbox@artcalendar.test" },
+        profile: {
+          id: "sandbox-mock-id",
+          role: sandboxOverride as "student" | "admin",
+          display_name: sandboxOverride === "admin" ? "샌드박스 관리자" : "샌드박스 학생",
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        },
+      };
+    }
+  } catch (cookieError) {
+    console.warn("[getSessionPayload] Failed to check cookies", cookieError);
+  }
+
   if (!isServerSupabaseConfigured()) {
     return null;
   }

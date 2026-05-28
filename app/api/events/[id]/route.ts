@@ -42,6 +42,22 @@ export async function PATCH(request: Request, context: RouteContext) {
       return NextResponse.json({ error: validationError }, { status: 400 });
     }
 
+    if (session.user.id === "sandbox-mock-id") {
+      return NextResponse.json({
+        event: {
+          id,
+          user_id: "sandbox-mock-id",
+          title: body.title.trim(),
+          description: body.description?.trim() || null,
+          start_date: body.start_date,
+          end_date: body.end_date,
+          color_code: body.color_code,
+          is_global: session.profile.role === "admin" ? true : false,
+          is_major: session.profile.role === "admin" ? Boolean(body.is_major) : false,
+        }
+      });
+    }
+
     const supabase = await createServerSupabaseClient();
     const { data: existing, error: fetchError } = await supabase
       .from("events")
@@ -97,6 +113,11 @@ export async function DELETE(_request: Request, context: RouteContext) {
     }
 
     const { id } = await context.params;
+
+    if (session.user.id === "sandbox-mock-id") {
+      return NextResponse.json({ success: true });
+    }
+
     const supabase = await createServerSupabaseClient();
 
     const { data: existing, error: fetchError } = await supabase

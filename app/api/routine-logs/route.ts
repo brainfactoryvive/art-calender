@@ -20,6 +20,33 @@ export async function GET(request: Request) {
       );
     }
 
+    if (session.user.id === "sandbox-mock-id") {
+      const todayStr = new Date().toISOString().split("T")[0];
+      const yesterday = new Date();
+      yesterday.setDate(yesterday.getDate() - 1);
+      const yesterdayStr = yesterday.toISOString().split("T")[0];
+
+      const mockLogs = [
+        {
+          id: "mock-log-1",
+          user_id: "sandbox-mock-id",
+          routine_id: "mock-routine-1",
+          log_date: todayStr,
+          completed: true,
+          created_at: new Date().toISOString(),
+        },
+        {
+          id: "mock-log-2",
+          user_id: "sandbox-mock-id",
+          routine_id: "mock-routine-2",
+          log_date: yesterdayStr,
+          completed: true,
+          created_at: new Date().toISOString(),
+        },
+      ];
+      return NextResponse.json({ logs: mockLogs });
+    }
+
     const supabase = await createServerSupabaseClient();
     const { data, error } = await supabase
       .from("routine_logs")
@@ -59,6 +86,19 @@ export async function POST(request: Request) {
       log_date: string;
       completed?: boolean;
     };
+
+    if (session.user.id === "sandbox-mock-id") {
+      return NextResponse.json({
+        log: {
+          id: `mock-log-${Date.now()}`,
+          user_id: "sandbox-mock-id",
+          routine_id: body.routine_id,
+          log_date: body.log_date,
+          completed: body.completed !== undefined ? body.completed : true,
+          created_at: new Date().toISOString(),
+        }
+      });
+    }
 
     if (!body.routine_id || !body.log_date) {
       return NextResponse.json(
