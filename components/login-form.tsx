@@ -185,18 +185,9 @@ export function LoginForm() {
             type="button"
             variant="outline"
             className="flex-1 text-xs"
-            onClick={async () => {
+            onClick={() => {
               // Bypasses via AuthProvider custom override Role
-              const { setOverrideRole } = await import("@/components/auth-provider").then(m => {
-                // Fetch context directly from a separate trigger or we can just redirect
-                // Since useRouter can push to '/' after setting it, let's redirect.
-                // But the easiest is to just let the user click the button to trigger redirect and set session
-                return m;
-              });
-              // To handle this cleanly, we can trigger custom session cookies or use simple client route.
-              // Let's redirect to main and use local storage or we can import useAuth.
-              // Instead of dynamic hook, we can just use router to push to "/" which has the "Try Sandbox" button,
-              // or let the form render sandbox option.
+              // Redirect to main and use sandbox query parameter
               window.location.href = "/?sandbox=student";
             }}
           >
