@@ -15,6 +15,7 @@ import type { SessionPayload, UserRole } from "@/types/auth";
 type AuthContextValue = {
   session: SessionPayload | null;
   role: UserRole | null;
+  dbRole: UserRole | null;
   isLoading: boolean;
   refreshSession: () => Promise<void>;
   signOut: () => Promise<void>;
@@ -141,6 +142,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return overrideRole ?? session?.profile.role ?? null;
   }, [overrideRole, session]);
 
+  const dbRole = useMemo(() => {
+    return session?.profile.role ?? null;
+  }, [session]);
+
   const isAuthLoading = useMemo(() => {
     if (overrideRole) return false;
     return isLoading;
@@ -151,12 +156,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     () => ({
       session: activeSession,
       role: activeRole,
+      dbRole,
       isLoading: isAuthLoading,
       refreshSession,
       signOut,
       setOverrideRole,
     }),
-    [activeSession, activeRole, isAuthLoading, refreshSession, signOut],
+    [activeSession, activeRole, dbRole, isAuthLoading, refreshSession, signOut],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

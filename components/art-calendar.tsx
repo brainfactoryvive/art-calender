@@ -119,7 +119,7 @@ export function ArtCalendar({
   routines = [],
   routinesEnabled = false,
 }: ArtCalendarProps) {
-  const { session, role, signOut, isLoading: isAuthLoading, setOverrideRole } = useAuth();
+  const { session, role, dbRole, signOut, isLoading: isAuthLoading, setOverrideRole } = useAuth();
 
   const calendarRef = useRef<FullCalendar>(null);
   const transitionTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -313,13 +313,15 @@ export function ArtCalendar({
           <Link href="/login" className={buttonVariants()}>
             로그인하기
           </Link>
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => setOverrideRole("student")}
-          >
-            개발용 샌드박스로 둘러보기
-          </Button>
+          {process.env.NODE_ENV === "development" && (
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setOverrideRole("student")}
+            >
+              개발용 샌드박스로 둘러보기
+            </Button>
+          )}
         </div>
       </div>
     );
@@ -347,31 +349,40 @@ export function ArtCalendar({
           <div className="mr-2 flex items-center gap-1.5 rounded-lg border border-border bg-muted/30 p-1 text-xs">
             <span className="pl-2 pr-1 font-medium text-foreground">
               {session.profile.display_name ?? session.user.email}
+              {(process.env.NODE_ENV !== "development" && dbRole !== "admin") && (
+                <span className="ml-1.5 rounded bg-foreground/10 px-1 py-0.5 text-[9px] text-muted-foreground font-semibold">
+                  {role === "admin" ? "관리자" : "학생"}
+                </span>
+              )}
             </span>
-            <button
-              type="button"
-              className={cn(
-                "rounded px-1.5 py-0.5 font-medium transition-all text-[11px]",
-                role === "student"
-                  ? "bg-primary text-primary-foreground shadow-sm"
-                  : "bg-transparent text-muted-foreground hover:text-foreground"
-              )}
-              onClick={() => setOverrideRole("student")}
-            >
-              학생
-            </button>
-            <button
-              type="button"
-              className={cn(
-                "rounded px-1.5 py-0.5 font-medium transition-all text-[11px]",
-                role === "admin"
-                  ? "bg-primary text-primary-foreground shadow-sm"
-                  : "bg-transparent text-muted-foreground hover:text-foreground"
-              )}
-              onClick={() => setOverrideRole("admin")}
-            >
-              관리자
-            </button>
+            {(process.env.NODE_ENV === "development" || dbRole === "admin") && (
+              <>
+                <button
+                  type="button"
+                  className={cn(
+                    "rounded px-1.5 py-0.5 font-medium transition-all text-[11px]",
+                    role === "student"
+                      ? "bg-primary text-primary-foreground shadow-sm"
+                      : "bg-transparent text-muted-foreground hover:text-foreground"
+                  )}
+                  onClick={() => setOverrideRole("student")}
+                >
+                  학생
+                </button>
+                <button
+                  type="button"
+                  className={cn(
+                    "rounded px-1.5 py-0.5 font-medium transition-all text-[11px]",
+                    role === "admin"
+                      ? "bg-primary text-primary-foreground shadow-sm"
+                      : "bg-transparent text-muted-foreground hover:text-foreground"
+                  )}
+                  onClick={() => setOverrideRole("admin")}
+                >
+                  관리자
+                </button>
+              </>
+            )}
             <span className="h-4 w-px bg-border mx-1" />
             <Button
               type="button"

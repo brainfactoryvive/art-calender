@@ -171,39 +171,43 @@ export function LoginForm() {
           </Button>
         </form>
 
-        <div className="relative my-4">
-          <div className="absolute inset-0 flex items-center">
-            <span className="w-full border-t border-border border-dashed" />
-          </div>
-          <div className="relative flex justify-center text-[10px] uppercase">
-            <span className="bg-card px-2 text-muted-foreground">개발 테스트용 샌드박스</span>
-          </div>
-        </div>
+        {process.env.NODE_ENV === "development" && (
+          <>
+            <div className="relative my-4">
+              <div className="absolute inset-0 flex items-center">
+                <span className="w-full border-t border-border border-dashed" />
+              </div>
+              <div className="relative flex justify-center text-[10px] uppercase">
+                <span className="bg-card px-2 text-muted-foreground">개발 테스트용 샌드박스</span>
+              </div>
+            </div>
 
-        <div className="flex gap-2">
-          <Button
-            type="button"
-            variant="outline"
-            className="flex-1 text-xs"
-            onClick={() => {
-              // Bypasses via AuthProvider custom override Role
-              // Redirect to main and use sandbox query parameter
-              window.location.href = "/?sandbox=student";
-            }}
-          >
-            학생 뷰로 시작
-          </Button>
-          <Button
-            type="button"
-            variant="outline"
-            className="flex-1 text-xs"
-            onClick={() => {
-              window.location.href = "/?sandbox=admin";
-            }}
-          >
-            관리자 뷰로 시작
-          </Button>
-        </div>
+            <div className="flex gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                className="flex-1 text-xs"
+                onClick={() => {
+                  // Bypasses via AuthProvider custom override Role
+                  // Redirect to main and use sandbox query parameter
+                  window.location.href = "/?sandbox=student";
+                }}
+              >
+                학생 뷰로 시작
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                className="flex-1 text-xs"
+                onClick={() => {
+                  window.location.href = "/?sandbox=admin";
+                }}
+              >
+                관리자 뷰로 시작
+              </Button>
+            </div>
+          </>
+        )}
       </div>
 
       <p className="mt-4 text-center text-xs text-muted-foreground">
