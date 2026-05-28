@@ -1,0 +1,137 @@
+/* FullCalendar v6 — monochrome art-calendar theme */
+
+.art-calendar .fc {
+  --fc-border-color: var(--border);
+  --fc-button-text-color: var(--foreground);
+  --fc-button-bg-color: var(--background);
+  --fc-button-border-color: var(--border);
+  --fc-button-hover-bg-color: var(--muted);
+  --fc-button-hover-border-color: var(--border);
+  --fc-button-active-bg-color: var(--primary);
+  --fc-button-active-border-color: var(--primary);
+  --fc-today-bg-color: color-mix(in oklch, var(--muted) 70%, transparent);
+  --fc-neutral-bg-color: var(--muted);
+  --fc-page-bg-color: transparent;
+  --fc-event-border-color: var(--primary);
+  --fc-event-bg-color: var(--primary);
+  --fc-event-text-color: var(--primary-foreground);
+  --fc-now-indicator-color: var(--foreground);
+  font-family: var(--font-sans), system-ui, sans-serif;
+}
+
+.art-calendar .fc .fc-scrollgrid,
+.art-calendar .fc .fc-scrollgrid-section > td {
+  border-color: var(--border);
+}
+
+.art-calendar .fc .fc-col-header-cell-cushion,
+.art-calendar .fc .fc-daygrid-day-number,
+.art-calendar .fc .fc-multimonth-title,
+.art-calendar .fc .fc-timegrid-axis-cushion,
+.art-calendar .fc .fc-timegrid-slot-label-cushion {
+  color: var(--muted-foreground);
+  font-weight: 500;
+  text-decoration: none;
+}
+
+.art-calendar .fc .fc-daygrid-day-number,
+.art-calendar .fc .fc-multimonth .fc-daygrid-day-number {
+  cursor: pointer;
+  border-radius: calc(var(--radius) - 2px);
+  padding: 0.2rem 0.45rem;
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease;
+}
+
+.art-calendar .fc .fc-daygrid-day-number:hover,
+.art-calendar .fc .fc-multimonth .fc-daygrid-day-number:hover {
+  background-color: var(--muted);
+  color: var(--foreground);
+}
+
+.art-calendar .fc .fc-day-today .fc-daygrid-day-number {
+  background-color: var(--primary);
+  color: var(--primary-foreground);
+}
+
+.art-calendar .fc .fc-day-today .fc-daygrid-day-number:hover {
+  background-color: color-mix(in oklch, var(--primary) 85%, var(--foreground));
+}
+
+.art-calendar .fc .fc-multimonth-month {
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border);
+  overflow: hidden;
+  background: var(--card);
+}
+
+.art-calendar .fc .fc-multimonth-title {
+  font-size: 0.8rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.art-calendar .fc .fc-timegrid-now-indicator-line {
+  border-width: 2px;
+}
+
+.art-calendar .fc .fc-timegrid-now-indicator-arrow {
+  border-color: var(--foreground);
+}
+
+.art-calendar .fc .fc-highlight {
+  background: color-mix(in oklch, var(--muted) 50%, transparent);
+}
+
+.art-calendar .fc .fc-daygrid-day.fc-day-drillable {
+  cursor: pointer;
+}
+
+.art-calendar .fc .fc-daygrid-day.fc-day-drillable:hover {
+  background-color: color-mix(in oklch, var(--muted) 40%, transparent);
+}
+
+/* Student view: global admission events (read-only background layer) */
+.art-calendar .fc .fc-event-global-readonly {
+  opacity: 0.92;
+  font-weight: 500;
+  cursor: default;
+  box-shadow: none;
+}
+
+.art-calendar .fc .fc-event-global-readonly .fc-event-title {
+  font-weight: 500;
+}
+
+/* Personal events render above globals (merge order + later paint) */
+.art-calendar .fc .fc-event-personal {
+  z-index: 2;
+  font-weight: 600;
+  box-shadow: 0 1px 2px rgb(0 0 0 / 12%);
+}
+
+.art-calendar .fc .fc-daygrid-event.fc-event-personal,
+.art-calendar .fc .fc-timegrid-event.fc-event-personal {
+  z-index: 3;
+}
+
+/* Habit tracker emoji row at bottom of day cells */
+.art-calendar .fc .fc-daygrid-day-frame {
+  display: flex;
+  flex-direction: column;
+}
+
+.art-calendar .fc .fc-daygrid-day-events {
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.art-calendar .fc .fc-routine-anchor {
+  margin-top: auto;
+  padding-bottom: 2px;
+}
+
+.art-calendar .fc .fc-routine-markers button {
+  cursor: pointer;
+}

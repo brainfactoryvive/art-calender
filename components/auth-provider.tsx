@@ -1,0 +1,176 @@
+"use client";
+
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
+
+import { createClient, isSupabaseConfigured } from "@/lib/supabase/client";
+import type { SessionPayload, UserRole } from "@/types/auth";
+
+type AuthContextValue = {
+  session: SessionPayload | null;
+  role: UserRole | null;
+  isLoading: boolean;
+  refreshSession: () => Promise<void>;
+  signOut: () => Promise<void>;
+  setOverrideRole: (role: UserRole | null) => void;
+};
+
+const AuthContext = createContext<AuthContextValue | undefined>(undefined);
+
+export function AuthProvider({ children }: { children: React.ReactNode }) {
+  const [session, setSession] = useState<SessionPayload | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [overrideRole, setOverrideRoleState] = useState<UserRole | null>(null);
+
+  const setOverrideRole = useCallback((role: UserRole | null) => {
+    setOverrideRoleState(role);
+    if (typeof document !== "undefined") {
+      if (role) {
+        document.cookie = `sandbox-override=${role}; path=/; max-age=3600`;
+      } else {
+        document.cookie = "sandbox-override=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC";
+      }
+    }
+  }, []);
+
+  const refreshSession = useCallback(async () => {
+    try {
+      const response = await fetch("/api/profile");
+      const payload = (await response.json()) as SessionPayload & {
+        error?: string;
+      };
+
+      if (!response.ok) {
+        if (payload.error) {
+          console.error("[auth]", payload.error);
+        }
+        setSession(null);
+        return;
+      }
+
+      setSession(payload);
+    } catch {
+      setSession(null);
+    }
+  }, []);
+
+  useEffect(() => {
+    // Check if query parameter has sandbox mode request
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      const sandboxRole = params.get("sandbox");
+      if (sandboxRole === "student" || sandboxRole === "admin") {
+        setOverrideRole(sandboxRole);
+        // Clear parameters from address bar cleanly
+        const cleanUrl = window.location.pathname;
+        window.history.replaceState({}, document.title, cleanUrl);
+      } else {
+        // Fallback: Read cookie if preset
+        const match = document.cookie.match(/(?:^|; )sandbox-override=([^;]*)/);
+        if (match && (match[1] === "student" || match[1] === "admin")) {
+          setOverrideRoleState(match[1] as UserRole);
+        }
+      }
+    }
+
+
+    if (!isSupabaseConfigured()) {
+      setIsLoading(false);
+      return;
+    }
+
+    refreshSession().finally(() => setIsLoading(false));
+
+    const supabase = createClient();
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(() => {
+      refreshSession();
+    });
+
+    return () => subscription.unsubscribe();
+  }, [refreshSession]);
+
+
+  const signOut = useCallback(async () => {
+    if (!isSupabaseConfigured()) {
+      window.location.href = "/login";
+      return;
+    }
+
+    const supabase = createClient();
+    await supabase.auth.signOut();
+    setSession(null);
+    setOverrideRole(null);
+    window.location.href = "/login";
+  }, []);
+
+  // Sandbox automatic mock session if we want to preview without fully logging in
+  const activeSession = useMemo(() => {
+    if (!session && overrideRole) {
+      return {
+        user: { id: "sandbox-mock-id", email: "sandbox@artcalendar.test" },
+        profile: {
+          id: "sandbox-mock-id",
+          role: overrideRole,
+          display_name: overrideRole === "admin" ? "샌드박스 관리자" : "샌드박스 학생",
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        },
+      };
+    }
+    if (session && overrideRole) {
+      return {
+        ...session,
+        profile: {
+          ...session.profile,
+          role: overrideRole,
+        },
+      };
+    }
+    return session;
+  }, [session, overrideRole]);
+
+  const activeRole = useMemo(() => {
+    return overrideRole ?? session?.profile.role ?? null;
+  }, [overrideRole, session]);
+
+  const isAuthLoading = useMemo(() => {
+    if (overrideRole) return false;
+    return isLoading;
+  }, [isLoading, overrideRole]);
+
+
+  const value = useMemo(
+    () => ({
+      session: activeSession,
+      role: activeRole,
+      isLoading: isAuthLoading,
+      refreshSession,
+      signOut,
+      setOverrideRole,
+    }),
+    [activeSession, activeRole, isAuthLoading, refreshSession, signOut],
+  );
+
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+}
+
+
+
+export function useAuth() {
+  const context = useContext(AuthContext);
+
+  if (!context) {
+    throw new Error("useAuth must be used within AuthProvider");
+  }
+
+  return context;
+}
+
