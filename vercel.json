@@ -7,7 +7,7 @@
     },
     {
       "path": "/api/cron/email-notifications?job=event_reminder",
-      "schedule": "0 * * * *"
+      "schedule": "0 9 * * *"
     }
   ]
 }
