@@ -124,6 +124,16 @@ export function ArtCalendar({
   const calendarRef = useRef<FullCalendar>(null);
   const transitionTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  const academicYearStartDate = useMemo(() => {
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = today.getMonth(); // 0이 1월, 1이 2월
+    if (month === 0) {
+      return `${year - 1}-02-01`;
+    }
+    return `${year}-02-01`;
+  }, []);
+
   const [currentView, setCurrentView] =
     useState<CalendarViewType>("multiMonthYear");
   const [title, setTitle] = useState("");
@@ -593,6 +603,7 @@ export function ArtCalendar({
             interactionPlugin,
           ]}
           initialView="multiMonthYear"
+          initialDate={academicYearStartDate}
           locale={koLocale}
           headerToolbar={false}
           height="auto"
@@ -608,7 +619,7 @@ export function ArtCalendar({
           views={{
             multiMonthYear: {
               type: "multiMonth",
-              duration: { years: 1 },
+              duration: { months: 12 },
               multiMonthMaxColumns: 4,
               multiMonthMinWidth: 220,
             },
