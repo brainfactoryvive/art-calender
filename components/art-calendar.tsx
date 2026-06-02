@@ -23,7 +23,7 @@ import {
 } from "lucide-react";
 
 import { useAuth } from "@/components/auth-provider";
-import { isSupabaseConfigured } from "@/lib/supabase/client";
+import { createClient, isSupabaseConfigured } from "@/lib/supabase/client";
 import Link from "next/link";
 import { EventFormModal } from "@/components/event-form-modal";
 import { Button, buttonVariants } from "@/components/ui/button";
@@ -304,15 +304,27 @@ export function ArtCalendar({
   }
 
   if (!session || !role) {
+    const handleLoginClick = async () => {
+      if (isSupabaseConfigured()) {
+        try {
+          const supabase = createClient();
+          await supabase.auth.signOut();
+        } catch (e) {
+          console.error("Signout error during login redirect", e);
+        }
+      }
+      window.location.href = "/login";
+    };
+
     return (
       <div className="flex min-h-[24rem] flex-col items-center justify-center gap-4 text-center">
         <p className="text-sm text-muted-foreground">
           로그인이 필요합니다.
         </p>
         <div className="flex flex-wrap items-center justify-center gap-3">
-          <Link href="/login" className={buttonVariants()}>
+          <Button onClick={handleLoginClick}>
             로그인하기
-          </Link>
+          </Button>
           {process.env.NODE_ENV === "development" && (
             <Button
               type="button"
