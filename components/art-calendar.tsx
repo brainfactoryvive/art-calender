@@ -408,6 +408,17 @@ export function ArtCalendar({
             </Button>
           </div>
 
+          {role === "admin" && (
+            <Button
+              type="button"
+              variant="default"
+              size="sm"
+              onClick={() => openCreateModal(new Date())}
+              className="gap-1 font-semibold bg-blue-600 hover:bg-blue-700 text-white"
+            >
+              + 일정 추가
+            </Button>
+          )}
 
           <div className="flex items-center gap-1">
             <Button
