@@ -1,7 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { EmojiClickData } from "emoji-picker-react";
 import { Theme } from "emoji-picker-react";
 
@@ -48,6 +48,7 @@ export function RoutineSetupModal({
 }: RoutineSetupModalProps) {
   const [drafts, setDrafts] = useState<RoutineDraft[]>(DEFAULT_DRAFTS);
   const [activeSlot, setActiveSlot] = useState<number>(1);
+  const [activeEmojiPickerSlot, setActiveEmojiPickerSlot] = useState<number | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -55,16 +56,9 @@ export function RoutineSetupModal({
     if (!open) return;
     setDrafts(DEFAULT_DRAFTS);
     setActiveSlot(1);
+    setActiveEmojiPickerSlot(null);
     setError(null);
   }, [open]);
-
-  const handleEmojiClick = (data: EmojiClickData) => {
-    setDrafts((prev) =>
-      prev.map((item) =>
-        item.slot === activeSlot ? { ...item, emoji: data.emoji } : item,
-      ),
-    );
-  };
 
   const handleSave = async () => {
     if (drafts.some((item) => !item.title.trim())) {
@@ -110,7 +104,7 @@ export function RoutineSetupModal({
         className="max-h-[90vh] overflow-y-auto sm:max-w-lg"
         showCloseButton={false}
       >
-        <DialogHeader>
+        <DialogHeader { /* eslint-disable-line */ } >
           <DialogTitle>매일 해야 하는 일 3가지</DialogTitle>
           <DialogDescription>
             노션처럼 이모지와 행동 문장으로 루틴을 등록하세요. 캘린더 날짜
@@ -141,11 +135,16 @@ export function RoutineSetupModal({
                   type="button"
                   className={cn(
                     "flex size-9 items-center justify-center rounded-lg border text-lg transition-all",
-                    activeSlot === draft.slot
+                    activeEmojiPickerSlot === draft.slot
                       ? "border-blue-500 bg-background shadow-sm ring-2 ring-blue-500/10"
                       : "border-border bg-muted hover:bg-muted/80"
                   )}
-                  onClick={() => setActiveSlot(draft.slot)}
+                  onClick={() => {
+                    setActiveEmojiPickerSlot((prev) =>
+                      prev === draft.slot ? null : draft.slot
+                    );
+                    setActiveSlot(draft.slot);
+                  }}
                   aria-label={`루틴 ${draft.slot} 이모지 선택`}
                 >
                   {draft.emoji}
@@ -158,12 +157,14 @@ export function RoutineSetupModal({
                       activeSlot === draft.slot ? "text-blue-500" : "text-muted-foreground"
                     )}
                   >
-                    루틴 {draft.slot} {activeSlot === draft.slot && "✍️ (이모지 선택 중)"}
+                    루틴 {draft.slot} {activeEmojiPickerSlot === draft.slot && "✍️ (이모지 선택 중)"}
                   </Label>
                   <Input
                     id={`routine-title-${draft.slot}`}
                     value={draft.title}
-                    onFocus={() => setActiveSlot(draft.slot)}
+                    onFocus={() => {
+                      setActiveSlot(draft.slot);
+                    }}
                     onChange={(e) =>
                       setDrafts((prev) =>
                         prev.map((item) =>
@@ -183,24 +184,32 @@ export function RoutineSetupModal({
                   />
                 </div>
               </div>
+
+              {/* 이모지 피커를 각 카드 내부에 완전히 격리하여 바인딩 */}
+              {activeEmojiPickerSlot === draft.slot && (
+                <div className="mt-3 border-t pt-3">
+                  <p className="mb-2 text-xs font-medium text-muted-foreground">
+                    루틴 {draft.slot} 이모지 선택
+                  </p>
+                  <EmojiPicker
+                    onEmojiClick={(data) => {
+                      setDrafts((prev) =>
+                        prev.map((item) =>
+                          item.slot === draft.slot ? { ...item, emoji: data.emoji } : item
+                        )
+                      );
+                      setActiveEmojiPickerSlot(null);
+                    }}
+                    theme={Theme.LIGHT}
+                    width="100%"
+                    height={280}
+                    searchPlaceHolder="이모지 검색"
+                    previewConfig={{ showPreview: false }}
+                  />
+                </div>
+              )}
             </div>
           ))}
-
-          {activeSlot && (
-            <div>
-              <p className="mb-2 text-xs text-muted-foreground">
-                루틴 {activeSlot} 이모지 선택
-              </p>
-              <EmojiPicker
-                onEmojiClick={handleEmojiClick}
-                theme={Theme.LIGHT}
-                width="100%"
-                height={320}
-                searchPlaceHolder="이모지 검색"
-                previewConfig={{ showPreview: false }}
-              />
-            </div>
-          )}
         </div>
 
         {error && (
