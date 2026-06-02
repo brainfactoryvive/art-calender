@@ -12,21 +12,9 @@ export const OAUTH_PROVIDERS: {
 }[] = [
   {
     id: "google",
-    label: "Google로 계속하기",
+    label: "Google로 로그인 / 가입하기",
     provider: "google",
     className: "bg-background text-foreground border-border hover:bg-muted",
-  },
-  {
-    id: "kakao",
-    label: "카카오로 계속하기",
-    provider: "kakao",
-    className: "bg-[#FEE500] text-[#191919] border-[#FEE500] hover:brightness-95",
-  },
-  {
-    id: "naver",
-    label: "네이버로 계속하기",
-    provider: "naver",
-    className: "bg-[#03C75A] text-white border-[#03C75A] hover:brightness-95",
   },
 ];
 

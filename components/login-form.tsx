@@ -1,64 +1,9 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-
 import { OAuthButtons } from "@/components/oauth-buttons";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { createClient } from "@/lib/supabase/client";
-import { cn } from "@/lib/utils";
 
 export function LoginForm() {
-  const router = useRouter();
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [displayName, setDisplayName] = useState("");
-  const [mode, setMode] = useState<"login" | "signup">("login");
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const handleSubmit = async (event: React.FormEvent) => {
-    event.preventDefault();
-    setIsSubmitting(true);
-    setError(null);
-
-    const supabase = createClient();
-
-    try {
-      if (mode === "login") {
-        const { error: signInError } = await supabase.auth.signInWithPassword({
-          email,
-          password,
-        });
-
-        if (signInError) throw signInError;
-      } else {
-        const { error: signUpError } = await supabase.auth.signUp({
-          email,
-          password,
-          options: {
-            data: { display_name: displayName || email.split("@")[0] },
-          },
-        });
-
-        if (signUpError) throw signUpError;
-      }
-
-      router.push("/");
-      router.refresh();
-    } catch (submitError) {
-      setError(
-        submitError instanceof Error
-          ? submitError.message
-          : "로그인에 실패했습니다.",
-      );
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
   return (
     <div className="mx-auto w-full max-w-sm">
       <div className="mb-8 text-center">
@@ -69,107 +14,12 @@ export function LoginForm() {
           입시 일정 로그인
         </h1>
         <p className="mt-2 text-sm text-muted-foreground">
-          간편 로그인 또는 이메일로 시작하세요.
+          구글 계정으로 간편하게 시작하세요.
         </p>
       </div>
 
-      <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
-        <p className="mb-3 text-center text-xs font-medium text-muted-foreground">
-          간편 로그인
-        </p>
+      <div className="rounded-xl border border-border bg-card p-6 shadow-sm space-y-4">
         <OAuthButtons />
-
-        <div className="relative my-6">
-          <div className="absolute inset-0 flex items-center">
-            <span className="w-full border-t border-border" />
-          </div>
-          <div className="relative flex justify-center text-xs uppercase">
-            <span className="bg-card px-2 text-muted-foreground">또는</span>
-          </div>
-        </div>
-
-        <div className="mb-4 flex rounded-lg border border-border bg-muted/40 p-0.5">
-          <button
-            type="button"
-            className={cn(
-              "flex-1 rounded-md px-3 py-1.5 text-sm font-medium transition-colors",
-              mode === "login"
-                ? "bg-background text-foreground shadow-sm"
-                : "text-muted-foreground",
-            )}
-            onClick={() => setMode("login")}
-          >
-            이메일 로그인
-          </button>
-          <button
-            type="button"
-            className={cn(
-              "flex-1 rounded-md px-3 py-1.5 text-sm font-medium transition-colors",
-              mode === "signup"
-                ? "bg-background text-foreground shadow-sm"
-                : "text-muted-foreground",
-            )}
-            onClick={() => setMode("signup")}
-          >
-            회원가입
-          </button>
-        </div>
-
-        <form onSubmit={handleSubmit} className="space-y-4">
-          {mode === "signup" && (
-            <div className="grid gap-2">
-              <Label htmlFor="display-name">이름</Label>
-              <Input
-                id="display-name"
-                value={displayName}
-                onChange={(e) => setDisplayName(e.target.value)}
-                placeholder="홍길동"
-              />
-            </div>
-          )}
-
-          <div className="grid gap-2">
-            <Label htmlFor="email">이메일</Label>
-            <Input
-              id="email"
-              type="email"
-              autoComplete="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="you@example.com"
-              required
-            />
-          </div>
-
-          <div className="grid gap-2">
-            <Label htmlFor="password">비밀번호</Label>
-            <Input
-              id="password"
-              type="password"
-              autoComplete={
-                mode === "login" ? "current-password" : "new-password"
-              }
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              minLength={6}
-            />
-          </div>
-
-          {error && (
-            <p className="text-sm text-destructive" role="alert">
-              {error}
-            </p>
-          )}
-
-          <Button type="submit" className="w-full" disabled={isSubmitting}>
-            {isSubmitting
-              ? "처리 중…"
-              : mode === "login"
-                ? "이메일로 로그인"
-                : "학생 계정 만들기"}
-          </Button>
-        </form>
 
         {process.env.NODE_ENV === "development" && (
           <>
@@ -188,8 +38,6 @@ export function LoginForm() {
                 variant="outline"
                 className="flex-1 text-xs"
                 onClick={() => {
-                  // Bypasses via AuthProvider custom override Role
-                  // Redirect to main and use sandbox query parameter
                   window.location.href = "/?sandbox=student";
                 }}
               >
@@ -215,6 +63,5 @@ export function LoginForm() {
         <code className="rounded bg-muted px-1">profiles.role = admin</code>
       </p>
     </div>
-
   );
 }

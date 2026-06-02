@@ -56,10 +56,6 @@ export function OAuthButtons() {
         </p>
       )}
 
-      <p className="text-center text-[11px] text-muted-foreground">
-        카카오·네이버는 Supabase 대시보드에서 OAuth Provider를 활성화해야
-        합니다.
-      </p>
     </div>
   );
 }
