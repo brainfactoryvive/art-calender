@@ -26,6 +26,7 @@ import { useAuth } from "@/components/auth-provider";
 import { createClient, isSupabaseConfigured } from "@/lib/supabase/client";
 import Link from "next/link";
 import { EventFormModal } from "@/components/event-form-modal";
+import { DailyPomodoro } from "@/components/daily-pomodoro";
 import { Button, buttonVariants } from "@/components/ui/button";
 import {
   canCreateOnDateClick,
@@ -136,6 +137,7 @@ export function ArtCalendar({
 
   const [currentView, setCurrentView] =
     useState<CalendarViewType>("multiMonthYear");
+  const [currentDate, setCurrentDate] = useState<Date>(new Date());
   const [title, setTitle] = useState("");
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [rangeStart, setRangeStart] = useState<Date | null>(null);
@@ -254,6 +256,7 @@ export function ArtCalendar({
     setCurrentView(info.view.type as CalendarViewType);
     setRangeStart(info.start);
     setRangeEnd(info.end);
+    setCurrentDate(info.view.calendar.getDate());
   }, []);
 
   const handleViewChange = useCallback(
@@ -528,7 +531,11 @@ export function ArtCalendar({
         </div>
       </header>
 
-      {role === "admin" ? (
+      {currentView === "timeGridDay" ? (
+        <p className="text-xs text-muted-foreground">
+          ⏱️ 뽀모도로 시계를 사용해 오늘 집중하고 성취할 목표를 한눈에 관리하세요.
+        </p>
+      ) : role === "admin" ? (
         <p className="text-xs text-muted-foreground">
           관리자: 날짜 클릭으로 전역 입시 일정을 등록·수정할 수 있습니다.
         </p>
@@ -541,16 +548,18 @@ export function ArtCalendar({
         </p>
       )}
 
-      <div className="flex flex-wrap gap-3 text-xs text-muted-foreground">
-        <span className="inline-flex items-center gap-1.5">
-          <span className="size-3 rounded-sm border border-border bg-[#e5e5e5]" />
-          전역 일정 (읽기 전용)
-        </span>
-        <span className="inline-flex items-center gap-1.5">
-          <span className="size-3 rounded-sm bg-[#1e3a5f]" />
-          개인 일정
-        </span>
-      </div>
+      {currentView !== "timeGridDay" && (
+        <div className="flex flex-wrap gap-3 text-xs text-muted-foreground">
+          <span className="inline-flex items-center gap-1.5">
+            <span className="size-3 rounded-sm border border-border bg-[#e5e5e5]" />
+            전역 일정 (읽기 전용)
+          </span>
+          <span className="inline-flex items-center gap-1.5">
+            <span className="size-3 rounded-sm bg-[#1e3a5f]" />
+            개인 일정
+          </span>
+        </div>
+      )}
 
       {error && (
         <p className="rounded-lg border border-destructive/30 bg-destructive/5 px-3 py-2 text-sm text-destructive">
@@ -592,70 +601,75 @@ export function ArtCalendar({
         className={cn(
           "min-h-[32rem] flex-1 overflow-hidden rounded-xl border border-border bg-card p-2 shadow-sm transition-opacity duration-300 ease-in-out sm:p-4",
           isTransitioning && "opacity-40",
+          currentView === "timeGridDay" && "p-4 sm:p-6"
         )}
       >
-        <FullCalendar
-          ref={calendarRef}
-          plugins={[
-            multiMonthPlugin,
-            dayGridPlugin,
-            timeGridPlugin,
-            interactionPlugin,
-          ]}
-          initialView="multiMonthYear"
-          initialDate={academicYearStartDate}
-          locale={koLocale}
-          headerToolbar={false}
-          height="auto"
-          contentHeight="auto"
-          expandRows
-          stickyHeaderDates
-          nowIndicator
-          dayMaxEvents
-          selectable={false}
-          navLinks={false}
-          events={calendarEvents}
-          eventOrder="start,-duration,allDay,title"
-          views={{
-            multiMonthYear: {
-              type: "multiMonth",
-              duration: { months: 12 },
-              multiMonthMaxColumns: 4,
-              multiMonthMinWidth: 220,
-            },
-          }}
-          dayCellClassNames={(arg) => {
-            const classes: string[] = [];
-            if (
-              canCreateOnDateClick(role) ||
-              DRILL_DOWN_VIEWS.includes(arg.view.type as CalendarViewType)
-            ) {
-              classes.push("fc-day-drillable");
-            }
-
-            // 연간 달력에서 당일 기준 지난 날들에 빨간색 라인 클래스 추가
-            if (arg.view.type === "multiMonthYear") {
-              const today = new Date();
-              const compDate = new Date(arg.date.getFullYear(), arg.date.getMonth(), arg.date.getDate());
-              const compToday = new Date(today.getFullYear(), today.getMonth(), today.getDate());
-
-              // 올해이고 오늘이거나 이전 날짜인 경우
-              if (arg.date.getFullYear() === today.getFullYear() && compDate.getTime() <= compToday.getTime()) {
-                classes.push("fc-past-red-line");
+        {currentView === "timeGridDay" ? (
+          <DailyPomodoro date={currentDate} />
+        ) : (
+          <FullCalendar
+            ref={calendarRef}
+            plugins={[
+              multiMonthPlugin,
+              dayGridPlugin,
+              timeGridPlugin,
+              interactionPlugin,
+            ]}
+            initialView="multiMonthYear"
+            initialDate={academicYearStartDate}
+            locale={koLocale}
+            headerToolbar={false}
+            height="auto"
+            contentHeight="auto"
+            expandRows
+            stickyHeaderDates
+            nowIndicator
+            dayMaxEvents
+            selectable={false}
+            navLinks={false}
+            events={calendarEvents}
+            eventOrder="start,-duration,allDay,title"
+            views={{
+              multiMonthYear: {
+                type: "multiMonth",
+                duration: { months: 12 },
+                multiMonthMaxColumns: 4,
+                multiMonthMinWidth: 220,
+              },
+            }}
+            dayCellClassNames={(arg) => {
+              const classes: string[] = [];
+              if (
+                canCreateOnDateClick(role) ||
+                DRILL_DOWN_VIEWS.includes(arg.view.type as CalendarViewType)
+              ) {
+                classes.push("fc-day-drillable");
               }
-            }
 
-            return classes;
-          }}
-          dayCellContent={renderDayCellContent}
-          dayCellDidMount={handleDayCellDidMount}
-          dayCellWillUnmount={handleDayCellWillUnmount}
-          dayHeaderDidMount={handleDayHeaderDidMount}
-          dayHeaderWillUnmount={handleDayHeaderWillUnmount}
-          datesSet={handleDatesSet}
-          dateClick={handleDateClick}
-          eventClick={handleEventClick}
-        />
+              // 연간 달력에서 당일 기준 지난 날들에 빨간색 라인 클래스 추가
+              if (arg.view.type === "multiMonthYear") {
+                const today = new Date();
+                const compDate = new Date(arg.date.getFullYear(), arg.date.getMonth(), arg.date.getDate());
+                const compToday = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+
+                // 올해이고 오늘이거나 이전 날짜인 경우
+                if (arg.date.getFullYear() === today.getFullYear() && compDate.getTime() <= compToday.getTime()) {
+                  classes.push("fc-past-red-line");
+                }
+              }
+
+              return classes;
+            }}
+            dayCellContent={renderDayCellContent}
+            dayCellDidMount={handleDayCellDidMount}
+            dayCellWillUnmount={handleDayCellWillUnmount}
+            dayHeaderDidMount={handleDayHeaderDidMount}
+            dayHeaderWillUnmount={handleDayHeaderWillUnmount}
+            datesSet={handleDatesSet}
+            dateClick={handleDateClick}
+            eventClick={handleEventClick}
+          />
+        )}
       </div>
 
       <EventFormModal
