@@ -123,6 +123,72 @@ export function EventFormModal({
     setError(null);
   }, [open, selectedDate, editingEvent, colorPresets]);
 
+  // 시각적 24시간 슬라이더 및 타임라인 계산용 헬퍼 함수
+  const getYearMonthDay = (dateStr: string) => {
+    if (!dateStr) return "";
+    return dateStr.substring(0, 10); // "YYYY-MM-DD"
+  };
+
+  const getHourAndMinute = (dateStr: string) => {
+    if (!dateStr) return { hour: 9, minute: 0 };
+    const timePart = dateStr.substring(11, 16); // "HH:mm"
+    if (!timePart) return { hour: 9, minute: 0 };
+    const [h, m] = timePart.split(":").map(Number);
+    return { hour: h ?? 9, minute: m ?? 0 };
+  };
+
+  const startVal = getHourAndMinute(form.start_date);
+  const endVal = getHourAndMinute(form.end_date);
+
+  const startDecimal = startVal.hour + startVal.minute / 60;
+  const endDecimal = endVal.hour + endVal.minute / 60;
+  const durationHours = Math.max(0, endDecimal - startDecimal);
+
+  const formatDuration = (hours: number) => {
+    const h = Math.floor(hours);
+    const m = Math.round((hours - h) * 60);
+    if (m === 0) return `${h}시간`;
+    return `${h}시간 ${m}분`;
+  };
+
+  const handleTimeChange = (type: "start" | "end", decimalValue: number) => {
+    const totalMinutes = Math.round(decimalValue * 60);
+    const h = Math.floor(totalMinutes / 60);
+    const m = totalMinutes % 60;
+    const timeStr = `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
+    
+    const datePart = getYearMonthDay(type === "start" ? form.start_date : form.end_date);
+    
+    setForm((prev) => {
+      const updatedStr = `${datePart}T${timeStr}`;
+      if (type === "start") {
+        // 종료 시각이 시작 시각보다 빠르면 밀어내기
+        const currentEnd = getHourAndMinute(prev.end_date);
+        const endDec = currentEnd.hour + currentEnd.minute / 60;
+        let newEndDate = prev.end_date;
+        if (endDec <= decimalValue) {
+          const nextH = Math.min(24, Math.floor((totalMinutes + 30) / 60));
+          const nextM = (totalMinutes + 30) % 60;
+          const nextTimeStr = `${String(nextH).padStart(2, "0")}:${String(nextM).padStart(2, "0")}`;
+          newEndDate = `${getYearMonthDay(prev.end_date)}T${nextTimeStr}`;
+        }
+        return { ...prev, start_date: updatedStr, end_date: newEndDate };
+      } else {
+        // 시작 시각이 종료 시각보다 늦으면 당겨오기
+        const currentStart = getHourAndMinute(prev.start_date);
+        const startDec = currentStart.hour + currentStart.minute / 60;
+        let newStartDate = prev.start_date;
+        if (startDec >= decimalValue) {
+          const prevH = Math.max(0, Math.floor((totalMinutes - 30) / 60));
+          const prevM = Math.max(0, (totalMinutes - 30) % 60);
+          const prevTimeStr = `${String(prevH).padStart(2, "0")}:${String(prevM).padStart(2, "0")}`;
+          newStartDate = `${getYearMonthDay(prev.start_date)}T${prevTimeStr}`;
+        }
+        return { ...prev, end_date: updatedStr, start_date: newStartDate };
+      }
+    });
+  };
+
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
 
@@ -265,33 +331,126 @@ export function EventFormModal({
             />
           </div>
 
-          <div className="grid gap-3 sm:grid-cols-2">
-            <div className="grid gap-2">
-              <Label htmlFor="event-start">시작</Label>
-              <Input
-                id="event-start"
-                type="datetime-local"
-                value={form.start_date}
-                onChange={(e) =>
-                  setForm((prev) => ({ ...prev, start_date: e.target.value }))
-                }
-                required
-                disabled={readOnly}
-              />
+          {/* 비주얼 타임 레인지 조절기 및 시간 그래픽 타임라인 */}
+          <div className="rounded-xl border border-border bg-muted/20 p-4 space-y-4">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-semibold text-muted-foreground">시각적 시간 및 분량 설정</span>
+              <span className="rounded-full bg-blue-500/10 px-2.5 py-1 text-xs font-bold text-blue-600 dark:text-blue-400">
+                총 {formatDuration(durationHours)} 동안
+              </span>
             </div>
-            <div className="grid gap-2">
-              <Label htmlFor="event-end">종료</Label>
-              <Input
-                id="event-end"
-                type="datetime-local"
-                value={form.end_date}
-                onChange={(e) =>
-                  setForm((prev) => ({ ...prev, end_date: e.target.value }))
-                }
-                required
-                disabled={readOnly}
-              />
+
+            {/* 24시간 타임라인 가로 바 그래픽 */}
+            <div className="relative pt-1">
+              <div className="h-4 w-full rounded-md bg-muted/60 relative overflow-hidden border border-border/40">
+                {/* 활성화 시간 영역 칠하기 (파란색 그라데이션) */}
+                <div
+                  className="absolute h-full bg-gradient-to-r from-blue-500 to-indigo-500 opacity-85 transition-all duration-300"
+                  style={{
+                    left: `${(startDecimal / 24) * 100}%`,
+                    width: `${(durationHours / 24) * 100}%`,
+                  }}
+                />
+                
+                {/* 1시간 단위 격자 구분선 */}
+                {Array.from({ length: 23 }).map((_, i) => (
+                  <div
+                    key={i}
+                    className="absolute h-full w-px bg-background/20"
+                    style={{ left: `${((i + 1) / 24) * 100}%` }}
+                  />
+                ))}
+              </div>
+
+              {/* 시간 눈금 (0, 6, 12, 18, 24시) */}
+              <div className="flex justify-between text-[10px] text-muted-foreground mt-1.5 px-0.5 font-medium">
+                <span>00시</span>
+                <span>06시</span>
+                <span>12시</span>
+                <span>18시</span>
+                <span>24시</span>
+              </div>
             </div>
+
+            {/* 간편 조절 슬라이더 슬롯 */}
+            <div className="grid gap-3 sm:grid-cols-2 pt-1">
+              <div className="space-y-1.5">
+                <div className="flex justify-between text-xs font-medium">
+                  <Label htmlFor="range-start-slider">시작 시각</Label>
+                  <span className="text-blue-500 font-bold">{String(startVal.hour).padStart(2, "0")}:{String(startVal.minute).padStart(2, "0")}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <input
+                    id="range-start-slider"
+                    type="range"
+                    min="0"
+                    max="23.5"
+                    step="0.5"
+                    value={startDecimal}
+                    disabled={readOnly}
+                    onChange={(e) => handleTimeChange("start", parseFloat(e.target.value))}
+                    className="w-full accent-blue-600 h-1.5 bg-muted rounded-lg appearance-none cursor-pointer"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-1.5">
+                <div className="flex justify-between text-xs font-medium">
+                  <Label htmlFor="range-end-slider">종료 시각</Label>
+                  <span className="text-indigo-500 font-bold">{String(endVal.hour).padStart(2, "0")}:{String(endVal.minute).padStart(2, "0")}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <input
+                    id="range-end-slider"
+                    type="range"
+                    min="0.5"
+                    max="24"
+                    step="0.5"
+                    value={endDecimal}
+                    disabled={readOnly}
+                    onChange={(e) => handleTimeChange("end", parseFloat(e.target.value))}
+                    className="w-full accent-indigo-600 h-1.5 bg-muted rounded-lg appearance-none cursor-pointer"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* 수동 정밀 조작 및 날짜 변경을 위한 세부 설정 아코디언 */}
+            <details className="text-[11px] text-muted-foreground">
+              <summary className="cursor-pointer hover:text-foreground transition-colors font-medium">
+                날짜 및 정밀 시각 직접 입력하기 (클릭)
+              </summary>
+              <div className="grid gap-3 sm:grid-cols-2 mt-2 pt-2 border-t border-border/30">
+                <div className="grid gap-1">
+                  <Label htmlFor="event-start" className="text-[10px]">시작 날짜/시각</Label>
+                  <Input
+                    id="event-start"
+                    type="datetime-local"
+                    value={form.start_date}
+                    onChange={(e) =>
+                      setForm((prev) => ({ ...prev, start_date: e.target.value }))
+                    }
+                    required
+                    disabled={readOnly}
+                    className="h-8 text-xs bg-background"
+                  />
+                </div>
+                <div className="grid gap-1">
+                  <Label htmlFor="event-end" className="text-[10px]">종료 날짜/시각</Label>
+                  <Input
+                    id="event-end"
+                    type="datetime-local"
+                    value={form.end_date}
+                    onChange={(e) =>
+                      setForm((prev) => ({ ...prev, end_date: e.target.value }))
+                    }
+                    required
+                    disabled={readOnly}
+                    className="h-8 text-xs bg-background"
+                  />
+                </div>
+              </div>
+            </details>
           </div>
 
           {isAdmin && !readOnly && (
