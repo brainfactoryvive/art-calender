@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useRef, useMemo, useState } from "react";
 import FullCalendar from "@fullcalendar/react";
 import type {
   CalendarApi,
@@ -150,11 +150,44 @@ export function ArtCalendar({
     userId,
   });
 
-  const { isCompleted, toggleLog } = useRoutineLogs({
+  const { logs, isCompleted, toggleLog } = useRoutineLogs({
     enabled: routinesEnabled,
     rangeStart,
     rangeEnd,
   });
+
+  const currentMonthInfo = useMemo(() => {
+    if (currentView !== "dayGridMonth" || !calendarRef.current || logs.length === 0) return null;
+    const api = calendarRef.current.getApi();
+    const currentStart = api.view.currentStart;
+    if (!currentStart) return null;
+
+    const year = currentStart.getFullYear();
+    const month = currentStart.getMonth();
+
+    // 이달의 총 일수
+    const totalDays = new Date(year, month + 1, 0).getDate();
+
+    // "YYYY-MM" 형식의 접두어
+    const pad = (n: number) => String(n).padStart(2, "0");
+    const prefix = `${year}-${pad(month + 1)}`;
+
+    // 이달에 완료된(completed: true) 루틴 로그 필터링
+    const thisMonthLogs = logs.filter(
+      (log) => log.log_date.startsWith(prefix) && log.completed
+    );
+
+    const completedCount = thisMonthLogs.length;
+    const totalSlots = totalDays * 3; // 하루 3개씩 루틴
+    const percentage = totalSlots > 0 ? (completedCount / totalSlots) * 100 : 0;
+
+    return {
+      month: month + 1,
+      totalSlots,
+      completedCount,
+      percentage: parseFloat(percentage.toFixed(1)),
+    };
+  }, [currentView, logs, rangeStart, rangeEnd]);
 
   const {
     handleDayCellDidMount,
@@ -513,6 +546,36 @@ export function ArtCalendar({
         <p className="rounded-lg border border-destructive/30 bg-destructive/5 px-3 py-2 text-sm text-destructive">
           {error}
         </p>
+      )}
+
+      {role === "student" && currentView === "dayGridMonth" && routinesEnabled && currentMonthInfo && (
+        <div className="animate-in fade-in slide-in-from-top-4 duration-300 rounded-xl border border-blue-500/10 bg-gradient-to-r from-blue-50/30 to-indigo-50/30 dark:from-blue-950/5 dark:to-indigo-950/5 p-4 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div className="flex size-11 items-center justify-center rounded-xl bg-blue-500/10 text-xl shadow-inner">
+              📈
+            </div>
+            <div>
+              <p className="text-xs font-semibold text-blue-500 uppercase tracking-wider">
+                {currentMonthInfo.month}월 루틴 달성 현황
+              </p>
+              <h3 className="text-sm font-bold text-foreground mt-0.5">
+                하루 3개씩 총 {currentMonthInfo.totalSlots}번 중 <span className="text-blue-600 dark:text-blue-400 font-extrabold">{currentMonthInfo.completedCount}번</span> 성공!
+              </h3>
+            </div>
+          </div>
+          
+          <div className="flex items-center gap-4 flex-1 max-w-[16rem] sm:justify-end">
+            <div className="w-full bg-muted rounded-full h-2 overflow-hidden border border-border">
+              <div 
+                className="bg-gradient-to-r from-blue-500 to-indigo-500 h-2 rounded-full transition-all duration-700 ease-out" 
+                style={{ width: `${currentMonthInfo.percentage}%` }}
+              />
+            </div>
+            <span className="text-base font-extrabold text-blue-600 dark:text-blue-400 whitespace-nowrap min-w-[3.5rem] text-right">
+              {currentMonthInfo.percentage}%
+            </span>
+          </div>
+        </div>
       )}
 
       <div
