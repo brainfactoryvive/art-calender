@@ -9,7 +9,6 @@ import type { CalendarViewType } from "@/types/calendar";
 import type { Routine } from "@/types/routine";
 
 const ROUTINE_DAY_VIEWS: CalendarViewType[] = [
-  "multiMonthYear",
   "dayGridMonth",
 ];
 

@@ -135,3 +135,22 @@
 .art-calendar .fc .fc-routine-markers button {
   cursor: pointer;
 }
+
+/* 연간 달력에서 오늘 이전의 지난 날들에 붉은색 하단 연속선 표시 */
+.art-calendar .fc .fc-past-red-line {
+  position: relative;
+  background-color: rgba(239, 68, 68, 0.02) !important;
+}
+
+.art-calendar .fc .fc-past-red-line::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 2px;
+  background-color: #ef4444; /* 선명한 붉은색 라인 */
+  z-index: 5;
+  pointer-events: none;
+  opacity: 0.85;
+}

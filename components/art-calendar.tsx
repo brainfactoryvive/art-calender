@@ -550,12 +550,29 @@ export function ArtCalendar({
               multiMonthMinWidth: 220,
             },
           }}
-          dayCellClassNames={(arg) =>
-            canCreateOnDateClick(role) ||
-            DRILL_DOWN_VIEWS.includes(arg.view.type as CalendarViewType)
-              ? ["fc-day-drillable"]
-              : []
-          }
+          dayCellClassNames={(arg) => {
+            const classes: string[] = [];
+            if (
+              canCreateOnDateClick(role) ||
+              DRILL_DOWN_VIEWS.includes(arg.view.type as CalendarViewType)
+            ) {
+              classes.push("fc-day-drillable");
+            }
+
+            // 연간 달력에서 당일 기준 지난 날들에 빨간색 라인 클래스 추가
+            if (arg.view.type === "multiMonthYear") {
+              const today = new Date();
+              const compDate = new Date(arg.date.getFullYear(), arg.date.getMonth(), arg.date.getDate());
+              const compToday = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+
+              // 올해이고 오늘이거나 이전 날짜인 경우
+              if (arg.date.getFullYear() === today.getFullYear() && compDate.getTime() <= compToday.getTime()) {
+                classes.push("fc-past-red-line");
+              }
+            }
+
+            return classes;
+          }}
           dayCellContent={renderDayCellContent}
           dayCellDidMount={handleDayCellDidMount}
           dayCellWillUnmount={handleDayCellWillUnmount}
