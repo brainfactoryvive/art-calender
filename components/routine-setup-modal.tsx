@@ -18,6 +18,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ROUTINE_SLOTS, type Routine, type RoutineDraft } from "@/types/routine";
+import { cn } from "@/lib/utils";
 
 const EmojiPicker = dynamic(() => import("emoji-picker-react"), {
   ssr: false,
@@ -128,24 +129,41 @@ export function RoutineSetupModal({
           {drafts.map((draft) => (
             <div
               key={draft.slot}
-              className="rounded-lg border border-border p-3"
+              className={cn(
+                "rounded-lg border p-3 transition-all",
+                activeSlot === draft.slot
+                  ? "border-blue-500 bg-blue-50/20 dark:bg-blue-950/10 shadow-sm"
+                  : "border-border bg-card"
+              )}
             >
               <div className="mb-2 flex items-center gap-2">
                 <button
                   type="button"
-                  className="flex size-9 items-center justify-center rounded-lg border border-border bg-muted text-lg"
+                  className={cn(
+                    "flex size-9 items-center justify-center rounded-lg border text-lg transition-all",
+                    activeSlot === draft.slot
+                      ? "border-blue-500 bg-background shadow-sm ring-2 ring-blue-500/10"
+                      : "border-border bg-muted hover:bg-muted/80"
+                  )}
                   onClick={() => setActiveSlot(draft.slot)}
                   aria-label={`루틴 ${draft.slot} 이모지 선택`}
                 >
                   {draft.emoji}
                 </button>
                 <div className="flex-1">
-                  <Label htmlFor={`routine-title-${draft.slot}`}>
-                    루틴 {draft.slot}
+                  <Label 
+                    htmlFor={`routine-title-${draft.slot}`}
+                    className={cn(
+                      "text-xs font-semibold transition-colors",
+                      activeSlot === draft.slot ? "text-blue-500" : "text-muted-foreground"
+                    )}
+                  >
+                    루틴 {draft.slot} {activeSlot === draft.slot && "✍️ (이모지 선택 중)"}
                   </Label>
                   <Input
                     id={`routine-title-${draft.slot}`}
                     value={draft.title}
+                    onFocus={() => setActiveSlot(draft.slot)}
                     onChange={(e) =>
                       setDrafts((prev) =>
                         prev.map((item) =>
