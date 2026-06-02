@@ -104,7 +104,7 @@ export function RoutineSetupModal({
         className="max-h-[90vh] overflow-y-auto sm:max-w-lg"
         showCloseButton={false}
       >
-        <DialogHeader { /* eslint-disable-line */ } >
+        <DialogHeader>
           <DialogTitle>매일 해야 하는 일 3가지</DialogTitle>
           <DialogDescription>
             노션처럼 이모지와 행동 문장으로 루틴을 등록하세요. 캘린더 날짜
