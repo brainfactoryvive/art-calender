@@ -58,10 +58,6 @@ export function LoginForm() {
         )}
       </div>
 
-      <p className="mt-4 text-center text-xs text-muted-foreground">
-        관리자 권한: Supabase에서{" "}
-        <code className="rounded bg-muted px-1">profiles.role = admin</code>
-      </p>
     </div>
   );
 }
