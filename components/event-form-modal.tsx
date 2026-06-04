@@ -193,7 +193,7 @@ export function EventFormModal({
   };
 
   const handleDelete = async () => {
-    if (!editingEvent || readOnly) return;
+    if (!editingEvent || (readOnly && !isAdmin)) return;
 
     setIsDeleting(true);
     setError(null);
@@ -488,6 +488,16 @@ export function EventFormModal({
               <span />
             )}
             <div className="flex gap-2">
+              {readOnly && isAdmin && (
+                <Button
+                  type="button"
+                  variant="destructive"
+                  onClick={handleDelete}
+                  disabled={isSaving || isDeleting}
+                >
+                  {isDeleting ? "삭제 중…" : "일정 삭제하기"}
+                </Button>
+              )}
               <Button
                 type="button"
                 variant="outline"
