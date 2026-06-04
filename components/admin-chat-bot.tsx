@@ -34,14 +34,39 @@ interface AdminChatBotProps {
 export function AdminChatBot({ onEventsUploaded }: AdminChatBotProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [input, setInput] = useState("");
-  const [messages, setMessages] = useState<ChatMessage[]>([
-    {
-      role: "assistant",
-      content: "안녕하세요, 원장님! 미술학원의 일정을 관리하는 AI 비서입니다. 🎨✨\n\n달력을 일일이 클릭하지 않으셔도 대화하듯 편하게 말씀하시면 일정을 한 번에 등록해 드립니다.\n\n예: \"내일 오후 2시 소묘 집중 피드백 3시간 등록해줘\""
-    }
-  ]);
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // 1. 컴포넌트 마운트 시 localStorage에서 이전 대화 내역 불러오기
+  useEffect(() => {
+    try {
+      const savedChat = localStorage.getItem("art-calendar-admin-chat");
+      if (savedChat) {
+        setMessages(JSON.parse(savedChat));
+      } else {
+        setMessages([
+          {
+            role: "assistant",
+            content: "안녕하세요, 원장님! 미술학원의 일정을 관리하는 AI 비서입니다. 🎨✨\n\n달력을 일일이 클릭하지 않으셔도 대화하듯 편하게 말씀하시면 일정을 한 번에 등록해 드립니다.\n\n예: \"내일 오후 2시 소묘 집중 피드백 3시간 등록해줘\""
+          }
+        ]);
+      }
+    } catch (e) {
+      console.error("Failed to load admin chat history", e);
+    }
+  }, []);
+
+  // 2. 대화 내용 변경 시마다 localStorage에 자동 백업
+  useEffect(() => {
+    if (messages.length > 0) {
+      try {
+        localStorage.setItem("art-calendar-admin-chat", JSON.stringify(messages));
+      } catch (e) {
+        console.error("Failed to save admin chat history", e);
+      }
+    }
+  }, [messages]);
 
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
 
@@ -189,15 +214,17 @@ export function AdminChatBot({ onEventsUploaded }: AdminChatBotProps) {
             </div>
           </div>
 
-          <Button
+          <button
             type="button"
-            variant="ghost"
-            size="icon"
-            onClick={() => setIsOpen(false)}
-            className="rounded-full size-8 hover:bg-slate-900 text-slate-400 hover:text-white"
+            onClick={(e) => {
+              e.stopPropagation();
+              setIsOpen(false);
+            }}
+            className="rounded-full size-9 hover:bg-slate-900 text-slate-400 hover:text-white flex items-center justify-center transition-colors border-none cursor-pointer z-50"
+            aria-label="닫기"
           >
-            <X className="size-4" />
-          </Button>
+            <X className="size-5" />
+          </button>
         </div>
 
         {/* 대화 히스토리 영역 */}
