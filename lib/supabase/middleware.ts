@@ -49,6 +49,11 @@ export async function updateSession(request: NextRequest) {
   // Bypass authentication checks for local sandbox testing
   if (hasSandboxParam) {
     if (pathname === "/login") {
+      if (!searchParams.has("sandbox")) {
+        const response = NextResponse.next();
+        response.cookies.delete("sandbox-override");
+        return response;
+      }
       const redirectUrl = request.nextUrl.clone();
       redirectUrl.pathname = "/";
       const response = NextResponse.redirect(redirectUrl);

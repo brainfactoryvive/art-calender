@@ -7,7 +7,7 @@ import { useAuth } from "@/components/auth-provider";
 import { Button } from "@/components/ui/button";
 
 export default function Home() {
-  const { role, setOverrideRole } = useAuth();
+  const { role, setOverrideRole, signOut } = useAuth();
   const [showCalendar, setShowCalendar] = useState(false);
   const [eyeOffset, setEyeOffset] = useState({ x: 0, y: 0 });
 
@@ -118,20 +118,41 @@ export default function Home() {
           </div>
 
           <div className="flex items-center gap-4">
-            <button
-              onClick={() => {
-                window.location.href = "/login";
-              }}
-              className="text-xs font-semibold px-4 py-2.5 rounded-lg border border-[#f4efe9]/20 hover:border-[#c68b59] hover:bg-[#c68b59]/10 transition-all duration-300"
-            >
-              회원가입
-            </button>
-            <button
-              onClick={() => handleEnterCalendar("admin")}
-              className="text-xs font-semibold px-4 py-2.5 rounded-lg bg-[#c68b59] text-[#11110f] hover:bg-[#b07a50] transition-all duration-300 shadow-md shadow-[#c68b59]/10"
-            >
-              관리자 모드
-            </button>
+            {role ? (
+              <>
+                <button
+                  onClick={() => signOut()}
+                  className="text-xs font-semibold px-4 py-2.5 rounded-lg border border-[#f4efe9]/20 hover:border-[#c68b59] hover:bg-[#c68b59]/10 transition-all duration-300"
+                >
+                  로그아웃
+                </button>
+                <button
+                  onClick={() => setShowCalendar(true)}
+                  className="text-xs font-semibold px-4 py-2.5 rounded-lg bg-[#c68b59] text-[#11110f] hover:bg-[#b07a50] transition-all duration-300 shadow-md shadow-[#c68b59]/10"
+                >
+                  캘린더로 이동
+                </button>
+              </>
+            ) : (
+              <>
+                <button
+                  onClick={() => {
+                    window.location.href = "/login";
+                  }}
+                  className="text-xs font-semibold px-4 py-2.5 rounded-lg border border-[#f4efe9]/20 hover:border-[#c68b59] hover:bg-[#c68b59]/10 transition-all duration-300"
+                >
+                  회원가입
+                </button>
+                <button
+                  onClick={() => {
+                    window.location.href = "/login";
+                  }}
+                  className="text-xs font-semibold px-4 py-2.5 rounded-lg bg-[#c68b59] text-[#11110f] hover:bg-[#b07a50] transition-all duration-300 shadow-md shadow-[#c68b59]/10"
+                >
+                  관리자 모드
+                </button>
+              </>
+            )}
           </div>
         </div>
       </header>
