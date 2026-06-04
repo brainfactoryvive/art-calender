@@ -164,10 +164,38 @@ export function ArtCalendar({
     userId,
   });
 
-  const handleEventsUploaded = useCallback((newEvents: CalendarEvent[]) => {
+  const handleEventsUploaded = useCallback((
+    newEvents: CalendarEvent[],
+    deletedIds?: string[],
+    deletedPatterns?: { title_keywords: string; start_date_prefix?: string }[]
+  ) => {
     if (session?.user.id === "sandbox-mock-id") {
-      // 샌드박스(개발용 모의 ID) 모드일 때는 서버 DB가 가상 처리되므로, 
-      // 클라이언트 측 로컬 상태에 일정을 직접 추가(upsert)해 줍니다.
+      // 1. 기존 일정이 삭제되었다면 localStorage에서 필터링 제거
+      if (deletedPatterns && deletedPatterns.length > 0) {
+        try {
+          const localData = localStorage.getItem("art-calendar-sandbox-events");
+          const localEvents: CalendarEvent[] = localData ? JSON.parse(localData) : [];
+          
+          const remainingEvents = localEvents.filter(evt => {
+            return !deletedPatterns.some(pattern => {
+              const matchesKeyword = evt.title.toLowerCase().includes(pattern.title_keywords.toLowerCase());
+              const matchesDate = !pattern.start_date_prefix || evt.start_date.startsWith(pattern.start_date_prefix);
+              return matchesKeyword && matchesDate;
+            });
+          });
+          
+          localStorage.setItem("art-calendar-sandbox-events", JSON.stringify(remainingEvents));
+          
+          // 로컬 상태 강제 동기화 유도
+          if (rangeStart && rangeEnd && refetch) {
+            refetch(rangeStart, rangeEnd);
+          }
+        } catch (e) {
+          console.error("Failed to sync deleted sandbox events", e);
+        }
+      }
+
+      // 2. 신규 일정 추가
       newEvents.forEach((evt) => {
         upsertEvent(evt);
       });

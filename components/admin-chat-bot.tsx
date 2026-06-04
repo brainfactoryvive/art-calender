@@ -24,7 +24,11 @@ interface ChatMessage {
 }
 
 interface AdminChatBotProps {
-  onEventsUploaded: (events: any[]) => void;
+  onEventsUploaded: (
+    events: any[],
+    deletedEventIds?: string[],
+    deletedPatterns?: any[]
+  ) => void;
 }
 
 export function AdminChatBot({ onEventsUploaded }: AdminChatBotProps) {
@@ -92,9 +96,13 @@ export function AdminChatBot({ onEventsUploaded }: AdminChatBotProps) {
 
       setMessages(prev => [...prev, assistantMessage]);
 
-      // 일정이 성공적으로 등록되었다면 부모 캘린더 새로고침 유도
-      if (data.events && data.events.length > 0) {
-        onEventsUploaded(data.events);
+      // 일정이 성공적으로 등록되거나 삭제되었다면 부모 캘린더 새로고침 유도
+      if (
+        (data.events && data.events.length > 0) || 
+        (data.deletedEventIds && data.deletedEventIds.length > 0) ||
+        (data.deletedPatterns && data.deletedPatterns.length > 0)
+      ) {
+        onEventsUploaded(data.events || [], data.deletedEventIds, data.deletedPatterns);
       }
 
     } catch (err: any) {

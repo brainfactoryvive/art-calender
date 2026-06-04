@@ -52,7 +52,22 @@ async function ensureProfileForUser(
     .eq("id", user.id)
     .maybeSingle<Profile>();
 
+  const isAdminEmail = user.email === "sonjongwon1@gmail.com";
+
   if (existing) {
+    // 이미 존재하는 계정이라도 관리자 이메일인데 role이 admin이 아니면 자동 업그레이드
+    if (isAdminEmail && existing.role !== "admin") {
+      const { data: updated, error: updateError } = await supabase
+        .from("profiles")
+        .update({ role: "admin" })
+        .eq("id", user.id)
+        .select("*")
+        .single<Profile>();
+      
+      if (!updateError && updated) {
+        return updated;
+      }
+    }
     return existing;
   }
 
@@ -69,7 +84,7 @@ async function ensureProfileForUser(
     .from("profiles")
     .insert({
       id: user.id,
-      role: "student",
+      role: isAdminEmail ? "admin" : "student",
       display_name: displayName,
     })
     .select("*")

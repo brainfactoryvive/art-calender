@@ -31,8 +31,8 @@ export async function POST(request: Request) {
     const days = ["일요일", "월요일", "화요일", "수요일", "목요일", "금요일", "토요일"];
     const dayOfWeek = days[kstDate.getUTCDay()];
 
-    const systemPrompt = `You are a scheduling AI assistant for an Art Academy Calendar (관리자용 일정 업로드 비서).
-Your goal is to parse user schedule instructions and output a structured JSON containing a conversational response and a list of structured calendar events to register.
+    const systemPrompt = `You are a scheduling AI assistant for an Art Academy Calendar (관리자용 일정 업로드 및 삭제 비서).
+Your goal is to parse user schedule instructions and output a structured JSON containing a conversational response, a list of structured calendar events to register, and/or a list of events to delete.
 
 - Current Today's Date is: ${todayStr} (${dayOfWeek}).
 - Calculate relative terms (e.g. "내일" -> ${new Date(kstDate.getTime() + 24*3600*1000).toISOString().split("T")[0]}, "다음 주 월요일", "6월 중순") precisely based on today's date (${todayStr}).
@@ -44,7 +44,8 @@ Your goal is to parse user schedule instructions and output a structured JSON co
   - Purple (#8b5cf6): Special feedback sessions, 1:1 consulting.
   - Orange (#f97316): Submissions, portfolio deadlines.
 - CRITICAL COLOR RULE FOR OVERLAPPING EVENTS: If multiple events run in parallel, overlap, or are registered in the same timeframe, DO NOT assign them the same color code. Alternate and distribute different color codes (e.g. Blue, Purple, Orange) so they stand out as separate, recognizable colored bars on the calendar.
-- Keep the 'reply' conversational, helpful, encouraging, and written in natural Korean. (e.g. "알겠습니다! 6월 15일~17일 기말고사 일정을 캘린더에 성공적으로 등록해 드릴게요. 🎨✨")
+- If the user asks to delete, cancel, or remove an event (e.g., "기말고사 일정 지워줘", "6월 15일 모의고사 지우기", "이번 달 세미나 삭제"), populate the 'delete_events' array with search criteria. Specify 'title_keywords' (the title keyword to delete) and optionally 'start_date_prefix' (YYYY-MM-DD prefix of the date) to target the exact date.
+- Keep the 'reply' conversational, helpful, encouraging, and written in natural Korean. (e.g. "알겠습니다! 6월 15일 기말고사 일정을 캘린더에서 깨끗이 삭제해 드릴게요. 🗑️✨")
 `;
 
     // Gemini API Request Payload 만들기
@@ -78,7 +79,7 @@ Your goal is to parse user schedule instructions and output a structured JSON co
               },
               events: {
                 type: "ARRAY",
-                description: "List of calendar events parsed and extracted from user prompt.",
+                description: "List of calendar events parsed and extracted from user prompt to CREATE.",
                 items: {
                   type: "OBJECT",
                   properties: {
@@ -90,6 +91,18 @@ Your goal is to parse user schedule instructions and output a structured JSON co
                     is_major: { type: "BOOLEAN", description: "Whether this is a major highlighted event" }
                   },
                   required: ["title", "start_date", "end_date", "color_code", "is_major"]
+                }
+              },
+              delete_events: {
+                type: "ARRAY",
+                description: "List of event query filters to DELETE if requested by the user.",
+                items: {
+                  type: "OBJECT",
+                  properties: {
+                    title_keywords: { type: "STRING", description: "Keyword of the event title to match (e.g., '기말고사')" },
+                    start_date_prefix: { type: "STRING", description: "Optional starting date prefix to match (YYYY-MM-DD), e.g., '2026-06-15'" }
+                  },
+                  required: ["title_keywords"]
                 }
               }
             },
@@ -114,9 +127,11 @@ Your goal is to parse user schedule instructions and output a structured JSON co
     // JSON 파싱
     const result = JSON.parse(geminiText);
     const parsedEvents = result.events || [];
+    const parsedDeleteEvents = result.delete_events || [];
 
     // DB 저장 또는 샌드박스 가상 저장 분기
     const savedEvents = [];
+    const deletedEventIds: string[] = [];
     const isSandbox = session.user.id === "sandbox-mock-id";
 
     if (isSandbox) {
@@ -136,8 +151,33 @@ Your goal is to parse user schedule instructions and output a structured JSON co
         });
       }
     } else {
-      // 실 DB 저장
+      // 실 DB 저장 및 기존 데이터 삭제
       const supabase = await createServerSupabaseClient();
+      
+      // 1. 기존 일정 삭제 처리
+      for (const delPattern of parsedDeleteEvents) {
+        const { title_keywords, start_date_prefix } = delPattern;
+        let query = supabase
+          .from("events")
+          .delete()
+          .eq("is_global", true) // 관리자이므로 전역 입시 일정만 삭제 대상으로 설정
+          .ilike("title", `%${title_keywords}%`);
+
+        if (start_date_prefix) {
+          query = query
+            .gte("start_date", `${start_date_prefix}T00:00:00Z`)
+            .lte("start_date", `${start_date_prefix}T23:59:59Z`);
+        }
+
+        const { data, error } = await query.select("id");
+        if (error) {
+          console.error("Supabase Delete Error:", error);
+        } else if (data) {
+          data.forEach((row: any) => deletedEventIds.push(row.id));
+        }
+      }
+
+      // 2. 신규 일정 생성 처리
       for (const event of parsedEvents) {
         const { data, error } = await supabase
           .from("events")
@@ -165,6 +205,8 @@ Your goal is to parse user schedule instructions and output a structured JSON co
     return NextResponse.json({
       reply: result.reply,
       events: savedEvents,
+      deletedPatterns: isSandbox ? parsedDeleteEvents : [],
+      deletedEventIds,
       isSandbox
     });
 
