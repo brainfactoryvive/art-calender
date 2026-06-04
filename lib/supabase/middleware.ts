@@ -38,6 +38,7 @@ export async function updateSession(request: NextRequest) {
   const hasSandboxParam = searchParams.has("sandbox") || sandboxCookie === "student" || sandboxCookie === "admin";
   
   const isPublicRoute =
+    pathname === "/" ||
     pathname.startsWith("/login") ||
     pathname.startsWith("/auth") ||
     pathname.startsWith("/api/auth") ||
