@@ -38,6 +38,7 @@ import { useRoutineLogs } from "@/hooks/use-routine-logs";
 import { cn } from "@/lib/utils";
 import type { UserRole } from "@/types/auth";
 import type { CalendarViewType } from "@/types/calendar";
+import { AdminChatBot } from "@/components/admin-chat-bot";
 import type { CalendarEvent } from "@/types/event";
 import type { Routine } from "@/types/routine";
 
@@ -155,12 +156,28 @@ export function ArtCalendar({
     error,
     upsertEvent,
     removeEvent,
+    refetch,
   } = useCalendarEvents({
     rangeStart,
     rangeEnd,
     role,
     userId,
   });
+
+  const handleEventsUploaded = useCallback((newEvents: CalendarEvent[]) => {
+    if (session?.user.id === "sandbox-mock-id") {
+      // 샌드박스(개발용 모의 ID) 모드일 때는 서버 DB가 가상 처리되므로, 
+      // 클라이언트 측 로컬 상태에 일정을 직접 추가(upsert)해 줍니다.
+      newEvents.forEach((evt) => {
+        upsertEvent(evt);
+      });
+    } else {
+      // 실서버 데이터베이스 연동 시에는 전체 캘린더 리패치 수행
+      if (rangeStart && rangeEnd && refetch) {
+        refetch(rangeStart, rangeEnd);
+      }
+    }
+  }, [session?.user.id, rangeStart, rangeEnd, refetch, upsertEvent]);
 
   const { logs, isCompleted, toggleLog } = useRoutineLogs({
     enabled: routinesEnabled,
@@ -265,10 +282,17 @@ export function ArtCalendar({
 
       runViewTransition((api) => {
         api.changeView(view);
+        if (view === "multiMonthYear") {
+          api.gotoDate(academicYearStartDate);
+        } else if (currentView === "multiMonthYear") {
+          // 연간 뷰에서 월간, 주간, 일간으로 나갈 때는 항상 오늘 날짜의 최신 일정을 보실 수 있도록
+          // 오늘(Today) 시점으로 달력을 스마트 포커싱해 줍니다!
+          api.today();
+        }
         setCurrentView(view);
       });
     },
-    [currentView, runViewTransition],
+    [currentView, runViewTransition, academicYearStartDate],
   );
 
   const handlePrev = useCallback(() => {
@@ -280,8 +304,15 @@ export function ArtCalendar({
   }, []);
 
   const handleToday = useCallback(() => {
-    calendarRef.current?.getApi().today();
-  }, []);
+    const api = calendarRef.current?.getApi();
+    if (!api) return;
+
+    if (api.view.type === "multiMonthYear") {
+      api.gotoDate(academicYearStartDate);
+    } else {
+      api.today();
+    }
+  }, [academicYearStartDate]);
 
   const handleDateClick = useCallback(
     (info: DateClickArg) => {
@@ -537,11 +568,11 @@ export function ArtCalendar({
         </p>
       ) : role === "admin" ? (
         <p className="text-xs text-muted-foreground">
-          관리자: 날짜 클릭으로 전역 입시 일정을 등록·수정할 수 있습니다.
+          관리자: 날짜 클릭으로 연간 입시 일정을 등록·수정할 수 있습니다.
         </p>
       ) : (
         <p className="text-xs text-muted-foreground">
-          학생: 옅은 배경의 전역 일정 위에 개인 일정을 겹쳐 표시합니다. 날짜
+          학생: 옅은 배경의 연간 일정 위에 개인 일정을 겹쳐 표시합니다. 날짜
           클릭으로 개인 일정을 추가하세요.
           {canDrillDown &&
             " 연간·월간에서는 일간 보기 전환은 뷰 메뉴를 이용하세요."}
@@ -552,7 +583,7 @@ export function ArtCalendar({
         <div className="flex flex-wrap gap-3 text-xs text-muted-foreground">
           <span className="inline-flex items-center gap-1.5">
             <span className="size-3 rounded-sm border border-border bg-[#e5e5e5]" />
-            전역 일정 (읽기 전용)
+            연간 일정 (읽기 전용)
           </span>
           <span className="inline-flex items-center gap-1.5">
             <span className="size-3 rounded-sm bg-[#1e3a5f]" />
@@ -604,9 +635,13 @@ export function ArtCalendar({
           currentView === "timeGridDay" && "p-4 sm:p-6"
         )}
       >
-        {currentView === "timeGridDay" ? (
+        {/* 일간 뷰일 때는 뽀모도로 대시보드 노출 */}
+        {currentView === "timeGridDay" && (
           <DailyPomodoro date={currentDate} />
-        ) : (
+        )}
+
+        {/* 캘린더 컴포넌트를 파괴하지 않고 백그라운드에 유지하여 API 제어(이전/다음 날짜 변경 및 뷰 전환)가 상시 작동하도록 처리 */}
+        <div className={cn(currentView === "timeGridDay" && "hidden")}>
           <FullCalendar
             ref={calendarRef}
             plugins={[
@@ -624,7 +659,7 @@ export function ArtCalendar({
             expandRows
             stickyHeaderDates
             nowIndicator
-            dayMaxEvents
+            dayMaxEvents={3}
             selectable={false}
             navLinks={false}
             events={calendarEvents}
@@ -669,7 +704,7 @@ export function ArtCalendar({
             dateClick={handleDateClick}
             eventClick={handleEventClick}
           />
-        )}
+        </div>
       </div>
 
       <EventFormModal
@@ -685,6 +720,9 @@ export function ArtCalendar({
         isCompleted={isCompleted}
         onToggleRoutine={toggleLog}
       />
+      {role === "admin" && (
+        <AdminChatBot onEventsUploaded={handleEventsUploaded} />
+      )}
     </section>
   );
 }

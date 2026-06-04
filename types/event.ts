@@ -29,4 +29,6 @@ export type EventFormValues = {
   end_date: string;
   color_code: string;
   is_major: boolean;
+  reminder_24h?: boolean;
+  reminder_3d?: boolean;
 };

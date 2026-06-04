@@ -8,7 +8,7 @@ export function buildWeeklyDigestSubject(weekLabel: string): string {
 
 export function buildWeeklyDigestHtml(events: CalendarEvent[]): string {
   if (events.length === 0) {
-    return "<p>이번 주 예정된 전역 입시 일정이 없습니다.</p>";
+    return "<p>이번 주 예정된 연간 입시 일정이 없습니다.</p>";
   }
 
   const items = events
@@ -18,7 +18,7 @@ export function buildWeeklyDigestHtml(events: CalendarEvent[]): string {
     )
     .join("");
 
-  return `<p>이번 주 전역 입시 일정입니다.</p><ul>${items}</ul>`;
+  return `<p>이번 주 연간 입시 일정입니다.</p><ul>${items}</ul>`;
 }
 
 export function buildReminderSubject(event: CalendarEvent): string {

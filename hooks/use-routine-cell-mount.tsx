@@ -30,7 +30,14 @@ export function useRoutineCellMount({
   const unmountCell = useCallback((dateKey: string) => {
     const root = rootsRef.current.get(dateKey);
     if (root) {
-      root.unmount();
+      setTimeout(() => {
+        try {
+          root.unmount();
+        } catch (e) {
+          // 이미 React 트리 소멸 등의 이유로 내부 언마운트되었을 경우의 오류 방지
+          console.warn("React root unmount safely ignored:", e);
+        }
+      }, 0);
       rootsRef.current.delete(dateKey);
     }
   }, []);
@@ -116,7 +123,15 @@ export function useRoutineCellMount({
 
   useEffect(() => {
     return () => {
-      rootsRef.current.forEach((root) => root.unmount());
+      rootsRef.current.forEach((root) => {
+        setTimeout(() => {
+          try {
+            root.unmount();
+          } catch (e) {
+            // 무시
+          }
+        }, 0);
+      });
       rootsRef.current.clear();
     };
   }, []);

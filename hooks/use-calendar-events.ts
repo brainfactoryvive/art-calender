@@ -53,6 +53,24 @@ export function useCalendarEvents({
       setIsLoading(true);
       setError(null);
 
+      // 샌드박스 모드일 때는 서버와의 실시간 DB 싱크를 생략하고 로컬스토리지 영속성을 기준으로 작동합니다.
+      if (userId === "sandbox-mock-id") {
+        try {
+          const localData = localStorage.getItem("art-calendar-sandbox-events");
+          const localEvents = localData ? JSON.parse(localData) : [];
+          if (fetchId !== fetchIdRef.current) return;
+          applyEvents(localEvents);
+        } catch (e) {
+          console.error("Failed to load sandbox events from localStorage", e);
+          applyEvents([]);
+        } finally {
+          if (fetchId === fetchIdRef.current) {
+            setIsLoading(false);
+          }
+        }
+        return;
+      }
+
       try {
         const params = new URLSearchParams({
           start: start.toISOString(),
@@ -97,10 +115,13 @@ export function useCalendarEvents({
           ? prev.map((item) => (item.id === event.id ? event : item))
           : [...prev, event];
         applyEvents(raw);
+        if (userId === "sandbox-mock-id") {
+          localStorage.setItem("art-calendar-sandbox-events", JSON.stringify(raw));
+        }
         return raw;
       });
     },
-    [applyEvents],
+    [applyEvents, userId],
   );
 
   const removeEvent = useCallback(
@@ -108,10 +129,13 @@ export function useCalendarEvents({
       setEvents((prev) => {
         const raw = prev.filter((item) => item.id !== eventId);
         applyEvents(raw);
+        if (userId === "sandbox-mock-id") {
+          localStorage.setItem("art-calendar-sandbox-events", JSON.stringify(raw));
+        }
         return raw;
       });
     },
-    [applyEvents],
+    [applyEvents, userId],
   );
 
   useEffect(() => {

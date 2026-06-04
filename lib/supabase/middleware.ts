@@ -34,13 +34,16 @@ export async function updateSession(request: NextRequest) {
 
   const pathname = request.nextUrl.pathname;
   const searchParams = request.nextUrl.searchParams;
-  const hasSandboxParam = searchParams.has("sandbox") || request.cookies.has("sandbox-override");
+  const sandboxCookie = request.cookies.get("sandbox-override")?.value;
+  const hasSandboxParam = searchParams.has("sandbox") || sandboxCookie === "student" || sandboxCookie === "admin";
   
   const isPublicRoute =
     pathname.startsWith("/login") ||
     pathname.startsWith("/auth") ||
     pathname.startsWith("/api/auth") ||
     pathname.startsWith("/api/cron");
+
+  console.log(`[middleware] pathname: ${pathname}, hasSandbox: ${hasSandboxParam}, sandboxCookie: ${sandboxCookie}, user: ${user ? user.email : "null"}`);
 
   // Bypass authentication checks for local sandbox testing
   if (hasSandboxParam) {
@@ -60,8 +63,8 @@ export async function updateSession(request: NextRequest) {
     return response;
   }
 
-
   if (!user && !isPublicRoute) {
+    console.log(`[middleware] Redirecting unauthenticated request to /login for path: ${pathname}`);
     const redirectUrl = request.nextUrl.clone();
     redirectUrl.pathname = "/login";
     return NextResponse.redirect(redirectUrl);

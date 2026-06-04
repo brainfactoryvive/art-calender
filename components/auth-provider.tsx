@@ -114,7 +114,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // Sandbox automatic mock session if we want to preview without fully logging in
   const activeSession = useMemo(() => {
-    if (!session && overrideRole) {
+    if (overrideRole) {
       return {
         user: { id: "sandbox-mock-id", email: "sandbox@artcalendar.test" },
         profile: {
@@ -123,15 +123,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           display_name: overrideRole === "admin" ? "샌드박스 관리자" : "샌드박스 학생",
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
-        },
-      };
-    }
-    if (session && overrideRole) {
-      return {
-        ...session,
-        profile: {
-          ...session.profile,
-          role: overrideRole,
         },
       };
     }
