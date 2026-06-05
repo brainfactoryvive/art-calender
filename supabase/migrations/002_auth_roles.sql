@@ -138,21 +138,21 @@ create policy "events_insert_student_personal"
     and user_id = auth.uid()
   );
 
--- Admin: update/delete any global event
+-- Admin: update/delete any event
 drop policy if exists "events_update_admin_global" on public.events;
 create policy "events_update_admin_global"
   on public.events
   for update
   to authenticated
-  using (public.is_admin() and is_global = true)
-  with check (public.is_admin() and is_global = true);
+  using (public.is_admin())
+  with check (public.is_admin());
 
 drop policy if exists "events_delete_admin_global" on public.events;
 create policy "events_delete_admin_global"
   on public.events
   for delete
   to authenticated
-  using (public.is_admin() and is_global = true);
+  using (public.is_admin());
 
 -- Student: update/delete own personal events only
 drop policy if exists "events_update_student_own" on public.events;

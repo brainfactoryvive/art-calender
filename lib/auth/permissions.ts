@@ -11,7 +11,7 @@ export function canEditEvent(
   userId: string,
 ): boolean {
   if (role === "admin") {
-    return event.is_global;
+    return event.is_global || event.user_id === userId;
   }
 
   return !event.is_global && event.user_id === userId;
