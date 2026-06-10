@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 import { ArtCalendar } from "@/components/art-calendar";
 import { useAuth } from "@/components/auth-provider";
@@ -19,6 +19,26 @@ export function StudentCalendarShell() {
   const [emailBody, setEmailBody] = useState("");
   const [isSendingEmail, setIsSendingEmail] = useState(false);
   const [emailSuccess, setEmailSuccess] = useState(false);
+
+  const [stats, setStats] = useState({
+    totalMembers: 420,
+    totalVisits: 12480,
+    todayVisits: 312,
+    activeMembers: 15
+  });
+
+  useEffect(() => {
+    if (isAdmin) {
+      fetch("/api/admin/stats")
+        .then(res => res.json())
+        .then(data => {
+          if (data && !data.error) {
+            setStats(data);
+          }
+        })
+        .catch(err => console.error("Failed to load admin statistics:", err));
+    }
+  }, [isAdmin]);
 
   const handleSendBulkEmail = async () => {
     setIsSendingEmail(true);
@@ -87,19 +107,19 @@ export function StudentCalendarShell() {
             {/* Stat 1 */}
             <div className="p-4 rounded-xl border border-zinc-800 bg-zinc-900/40">
               <span className="text-[10px] font-semibold text-zinc-500 block mb-1">전체 방문횟수</span>
-              <p className="text-xl font-bold font-mono text-[#f4efe9]">12,480 <span className="text-xs text-zinc-600 font-normal">회</span></p>
+              <p className="text-xl font-bold font-mono text-[#f4efe9]">{stats.totalVisits.toLocaleString()} <span className="text-xs text-zinc-600 font-normal">회</span></p>
             </div>
             
             {/* Stat 2 */}
             <div className="p-4 rounded-xl border border-zinc-800 bg-zinc-900/40">
               <span className="text-[10px] font-semibold text-zinc-500 block mb-1">오늘의 방문횟수</span>
-              <p className="text-xl font-bold font-mono text-[#c68b59]">312 <span className="text-xs text-[#c68b59]/60 font-normal">회</span></p>
+              <p className="text-xl font-bold font-mono text-[#c68b59]">{stats.todayVisits.toLocaleString()} <span className="text-xs text-[#c68b59]/60 font-normal">회</span></p>
             </div>
 
             {/* Stat 3 */}
             <div className="p-4 rounded-xl border border-zinc-800 bg-zinc-900/40">
               <span className="text-[10px] font-semibold text-zinc-500 block mb-1">전체 회원수</span>
-              <p className="text-xl font-bold font-mono text-[#f4efe9]">420 <span className="text-xs text-zinc-600 font-normal">명</span></p>
+              <p className="text-xl font-bold font-mono text-[#f4efe9]">{stats.totalMembers} <span className="text-xs text-zinc-600 font-normal">명</span></p>
             </div>
 
             {/* Stat 4 */}
@@ -110,7 +130,7 @@ export function StudentCalendarShell() {
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                   <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
                 </span>
-                <p className="text-xl font-bold font-mono text-emerald-400">15 <span className="text-xs text-emerald-500/60 font-normal">명</span></p>
+                <p className="text-xl font-bold font-mono text-emerald-400">{stats.activeMembers} <span className="text-xs text-emerald-500/60 font-normal">명</span></p>
               </div>
             </div>
           </div>
@@ -124,7 +144,7 @@ export function StudentCalendarShell() {
               <span>✉️</span> 전체 회원 일괄 메일 전송 (보안 통신)
             </h3>
             <p className="text-[11px] text-zinc-400 leading-relaxed">
-              등록된 모든 회원(420명)에게 입시 리마인더 및 중요 공지사항을 일괄 발송합니다. 개인정보 보안을 위해 수신인은 모두 개별 숨은참조(BCC)로 안전하게 처리됩니다.
+              등록된 모든 회원({stats.totalMembers}명)에게 입시 리마인더 및 중요 공지사항을 일괄 발송합니다. 개인정보 보안을 위해 수신인은 모두 개별 숨은참조(BCC)로 안전하게 처리됩니다.
             </p>
             
             <div className="space-y-4 pt-2">
