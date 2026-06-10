@@ -58,6 +58,26 @@ export function LoginForm() {
         )}
       </div>
 
+      <div className="mt-6 rounded-xl border border-border/60 bg-muted/30 p-5 shadow-sm text-left">
+        <h2 className="text-xs font-semibold text-foreground/90 flex items-center gap-1.5 mb-3">
+          <span className="text-muted-foreground/80">📋</span> 가입 및 이용 안내사항
+        </h2>
+        <ul className="space-y-2.5 text-[11px] text-muted-foreground leading-relaxed">
+          <li className="flex gap-1.5">
+            <span className="text-amber-600/70 dark:text-amber-400/70 shrink-0 font-medium">1.</span>
+            <span>회원가입을 통해 공통일정과 개인일정을 동시에 저장, 확인, 리마인드 할 수 있습니다.</span>
+          </li>
+          <li className="flex gap-1.5">
+            <span className="text-amber-600/70 dark:text-amber-400/70 shrink-0 font-medium">2.</span>
+            <span>공지된 일정은 학교 측 사정으로 변경될 수 있으므로, 최종 일정은 반드시 학교 입학처 공지사항을 확인하시길 바랍니다.</span>
+          </li>
+          <li className="flex gap-1.5">
+            <span className="text-amber-600/70 dark:text-amber-400/70 shrink-0 font-medium">3.</span>
+            <span>입시일정 AI는 잘못된 정보를 제공할 수 있습니다. 또한 챗봇과 대화 시 입시일정 외의 대화는 답변이 거절될 수 있습니다.</span>
+          </li>
+        </ul>
+      </div>
+
     </div>
   );
 }

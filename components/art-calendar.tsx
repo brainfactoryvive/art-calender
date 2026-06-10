@@ -39,6 +39,7 @@ import { cn } from "@/lib/utils";
 import type { UserRole } from "@/types/auth";
 import type { CalendarViewType } from "@/types/calendar";
 import { AdminChatBot } from "@/components/admin-chat-bot";
+import { StudentChatBot } from "@/components/student-chat-bot";
 import type { CalendarEvent } from "@/types/event";
 import type { Routine } from "@/types/routine";
 
@@ -750,6 +751,9 @@ export function ArtCalendar({
       />
       {role === "admin" && (
         <AdminChatBot onEventsUploaded={handleEventsUploaded} />
+      )}
+      {role === "student" && (
+        <StudentChatBot events={calendarEvents} routines={routines} />
       )}
     </section>
   );
