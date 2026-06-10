@@ -200,6 +200,51 @@ export default function DemoPage() {
               </div>
             ))}
           </div>
+          
+          {/* FAQ 하단 공식 SNS 바로가기 링크 버튼 */}
+          <div className="mt-8 pt-6 border-t border-[#f4efe9]/5 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <span className="text-[10px] sm:text-xs text-[#f4efe9]/40 tracking-widest uppercase font-semibold">BRAINFACTORY OFFICIAL CHANNELS</span>
+            <div className="flex items-center gap-4">
+              <a 
+                href="https://www.instagram.com/brainfactory_design/" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                title="브레인팩토리 인스타그램 바로가기"
+                className="flex items-center gap-2 px-4 py-2 rounded-full bg-black/40 border border-[#f4efe9]/10 text-xs text-[#f4efe9]/80 hover:text-white transition-all duration-300 shadow-lg hover:shadow-pink-500/10 hover:border-[#ee2a7b] group/sns"
+              >
+                <svg 
+                  viewBox="0 0 24 24" 
+                  fill="none" 
+                  stroke="currentColor" 
+                  strokeWidth="2" 
+                  strokeLinecap="round" 
+                  strokeLinejoin="round" 
+                  className="w-4 h-4 text-[#c68b59] group-hover/sns:text-[#ee2a7b] transition-colors duration-300"
+                >
+                  <rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect>
+                  <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path>
+                  <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line>
+                </svg>
+                <span className="font-medium tracking-tight">Instagram</span>
+              </a>
+              <a 
+                href="https://blog.naver.com/bfsmartmobs" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                title="브레인팩토리 네이버 블로그 바로가기"
+                className="flex items-center gap-2 px-4 py-2 rounded-full bg-black/40 border border-[#f4efe9]/10 text-xs text-[#f4efe9]/80 hover:text-white transition-all duration-300 shadow-lg hover:shadow-emerald-500/10 hover:border-[#03C75A] group/sns"
+              >
+                <svg 
+                  viewBox="0 0 24 24" 
+                  fill="currentColor" 
+                  className="w-4 h-4 text-[#c68b59] group-hover/sns:text-[#03C75A] transition-colors duration-300"
+                >
+                  <path d="M16.2 2H7.8C4.6 2 2 4.6 2 7.8v8.4C2 19.4 4.6 22 7.8 22h8.4c3.2 0 5.8-2.6 5.8-5.8V7.8C22 4.6 19.4 2 16.2 2zm-3.6 13.7l-2.4-3.5V16H8.2V8h2l2.4 3.5V8h2v8h-2z"/>
+                </svg>
+                <span className="font-medium tracking-tight">Naver Blog</span>
+              </a>
+            </div>
+          </div>
         </div>
 
         {/* 안내문 */}

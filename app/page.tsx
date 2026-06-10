@@ -418,7 +418,49 @@ export default function Home() {
                 </div>
               </div>
             ))}
-          </div>
+            </div>
+        </div>
+
+        {/* FAQ 하단 공식 SNS 바로가기 링크 버튼 (박스 외부 배치) */}
+        <div className="flex items-center justify-center gap-4 mt-8 mb-12">
+          <a 
+            href="https://www.instagram.com/brainfactory_design/" 
+            target="_blank" 
+            rel="noopener noreferrer"
+            title="브레인팩토리 인스타그램 바로가기"
+            className="flex items-center gap-2 px-5 py-2.5 rounded-full bg-[#161613]/60 backdrop-blur-md border border-[#f4efe9]/10 hover:border-[#ee2a7b]/40 text-xs text-[#f4efe9]/80 hover:text-white transition-all duration-300 shadow-xl hover:shadow-pink-500/5 group/sns"
+          >
+            <svg 
+              viewBox="0 0 24 24" 
+              fill="none" 
+              stroke="currentColor" 
+              strokeWidth="2" 
+              strokeLinecap="round" 
+              strokeLinejoin="round" 
+              className="w-4 h-4 text-[#c68b59] group-hover/sns:text-[#ee2a7b] group-hover/sns:scale-110 transition-all duration-300"
+            >
+              <rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect>
+              <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path>
+              <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line>
+            </svg>
+            <span className="font-semibold tracking-wide">Instagram</span>
+          </a>
+          <a 
+            href="https://blog.naver.com/bfsmartmobs" 
+            target="_blank" 
+            rel="noopener noreferrer"
+            title="브레인팩토리 네이버 블로그 바로가기"
+            className="flex items-center gap-2 px-5 py-2.5 rounded-full bg-[#161613]/60 backdrop-blur-md border border-[#f4efe9]/10 hover:border-[#03C75A]/40 text-xs text-[#f4efe9]/80 hover:text-white transition-all duration-300 shadow-xl hover:shadow-emerald-500/5 group/sns"
+          >
+            <svg 
+              viewBox="0 0 24 24" 
+              fill="currentColor" 
+              className="w-4 h-4 text-[#c68b59] group-hover/sns:text-[#03C75A] group-hover/sns:scale-110 transition-all duration-300"
+            >
+              <path d="M12 2C6.48 2 2 6.48 2 12c0 1.54.35 3.01.98 4.31L1.03 21.6c-.14.28.08.6.39.53l5.37-1.12c1.55.77 3.32 1.2 5.21 1.2 5.52 0 10-4.48 10-10S17.52 2 12 2zm1.65 13.1c-.24-.04-.49-.1-.73-.18V11.2c.24-.08.49-.14.73-.18.77-.12 1.35.34 1.35 1.12v1.84c0 .78-.58 1.24-1.35 1.12zM9.3 11.2c.24.04.49.1.73.18v3.74c-.24.08-.49.14-.73.18-.77.12-1.35-.34-1.35-1.12V12.3c0-.78.58-1.24 1.35-1.12z"/>
+            </svg>
+            <span className="font-semibold tracking-wide">Naver Blog</span>
+          </a>
         </div>
 
       </section>
