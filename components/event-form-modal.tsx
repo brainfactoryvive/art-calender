@@ -154,7 +154,7 @@ export function EventFormModal({
       start_date: localDatetimeToISO(form.start_date),
       end_date: localDatetimeToISO(form.end_date),
       color_code: form.color_code,
-      is_major: isAdmin ? form.is_major : false,
+      is_major: form.is_major,
     };
 
     try {
@@ -312,9 +312,9 @@ export function EventFormModal({
             </div>
           </div>
 
-          {isAdmin && !readOnly && (
+          {!readOnly && (
             <div className="grid gap-2 border-t border-border/30 pt-3">
-              <Label className="text-xs font-bold text-muted-foreground">🔔 주요 일정 리마인더 설정</Label>
+              <Label className="text-xs font-bold text-muted-foreground">🔔 일정 리마인더 메일 설정</Label>
               <div className="flex flex-col gap-2.5 mt-1">
                 <label className="flex items-center gap-2.5 text-sm text-foreground cursor-pointer">
                   <Checkbox

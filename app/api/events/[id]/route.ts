@@ -53,7 +53,7 @@ export async function PATCH(request: Request, context: RouteContext) {
           end_date: body.end_date,
           color_code: body.color_code,
           is_global: session.profile.role === "admin" ? true : false,
-          is_major: session.profile.role === "admin" ? Boolean(body.is_major) : false,
+          is_major: Boolean(body.is_major),
         }
       });
     }
@@ -82,8 +82,7 @@ export async function PATCH(request: Request, context: RouteContext) {
       end_date: body.end_date,
       color_code: body.color_code,
       is_global: session.profile.role === "admin" ? true : false,
-      is_major:
-        session.profile.role === "admin" ? Boolean(body.is_major) : false,
+      is_major: Boolean(body.is_major),
     };
 
     const { data, error } = await supabase

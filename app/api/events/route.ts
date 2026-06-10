@@ -92,7 +92,7 @@ export async function POST(request: Request) {
         end_date: body.end_date,
         color_code: body.color_code,
         is_global: session.profile.role === "admin" ? defaultIsGlobalForRole(session.profile.role) : false,
-        is_major: session.profile.role === "admin" ? Boolean(body.is_major) : false,
+        is_major: Boolean(body.is_major),
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       };
@@ -119,7 +119,7 @@ export async function POST(request: Request) {
         end_date: body.end_date,
         color_code: body.color_code,
         is_global: role === "admin" ? defaultIsGlobalForRole(role) : false,
-        is_major: role === "admin" ? Boolean(body.is_major) : false,
+        is_major: Boolean(body.is_major),
       })
       .select("*")
       .single();
