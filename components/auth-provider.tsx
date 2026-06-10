@@ -100,15 +100,35 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
 
   const signOut = useCallback(async () => {
-    if (!isSupabaseConfigured()) {
-      window.location.href = "/login";
-      return;
+    if (typeof window !== "undefined") {
+      // 샌드박스 오버라이드 및 세션 관련 쿠키 완전 초기화
+      document.cookie = "sandbox-override=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC;";
+      document.cookie = "sb-access-token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC;";
+      document.cookie = "sb-refresh-token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC;";
+
+      // Supabase 캐시 및 브라우저 로컬 저장소 완전 삭제 (로그인 정보 강제 파기)
+      Object.keys(localStorage).forEach((key) => {
+        if (key.startsWith("sb-") || key.includes("supabase") || key.includes("auth")) {
+          localStorage.removeItem(key);
+        }
+      });
+      sessionStorage.clear();
     }
 
-    const supabase = createClient();
-    await supabase.auth.signOut();
+    if (isSupabaseConfigured()) {
+      try {
+        const supabase = createClient();
+        // Supabase 서버 세션 파기 및 쿠키 만료 유도
+        await supabase.auth.signOut();
+      } catch (e) {
+        console.error("Supabase signOut error", e);
+      }
+    }
+
     setSession(null);
     setOverrideRole(null);
+    
+    // 페이지를 강제 새로고침(Reload)하면서 로그인 화면으로 보내 잔여 메모리 상태까지 소멸시킵니다.
     window.location.href = "/login";
   }, []);
 
